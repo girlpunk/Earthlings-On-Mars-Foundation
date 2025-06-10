@@ -1,6 +1,10 @@
+
+from __future__ import annotations
+
+from typing import ClassVar
+
 from django.contrib import admin
 
-# Register your models here.
 from . import models
 
 admin.site.register(models.Recruit)
@@ -16,9 +20,9 @@ class PrerequisiteInline(admin.TabularInline):
     extra = 1
 
 class MissionAdmin(admin.ModelAdmin):
-    list_display = ["name", "issued_by"]
-    search_fields = ["name", "give_text", "completion_text"]
-    fieldsets = [
+    list_display: ClassVar[list[str]] = ["name", "issued_by"]
+    search_fields: ClassVar[list[str]] = ["name", "give_text", "completion_text"]
+    fieldsets: ClassVar[list[set[str, dict[str, list[str]]]]] = [
         (
             None,
             {
@@ -44,7 +48,7 @@ class MissionAdmin(admin.ModelAdmin):
         ("Call back with a code from a physical item", {"fields": ["code"], "classes": ["collapse"]})
     ]
 
-    inlines = [PrerequisiteInline]
+    inlines: ClassVar[list[str]] = [PrerequisiteInline]
 
 
 admin.site.register(models.Mission, MissionAdmin)

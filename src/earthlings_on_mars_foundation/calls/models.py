@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 from enum import IntEnum
+from typing import ClassVar
 
 from django.db import models
 
@@ -18,7 +21,7 @@ class NPC(models.Model):
         return self.name
 
     class Meta:
-        indexes = [
+        indexes: ClassVar[list[models.Index]] = [
             models.Index(fields=["extension"])
         ]
 
@@ -54,7 +57,7 @@ class Location(models.Model):
         return self.name
 
     class Meta:
-        indexes = [
+        indexes: ClassVar[list[models.Index]] = [
             models.Index(fields=["extension"])
         ]
 
@@ -95,7 +98,7 @@ class Mission(models.Model):
         return self.name
 
     class Meta:
-        constraints = [
+        constraints: ClassVar[list[models.CheckConstraint]] = [
             models.CheckConstraint(condition=models.Q(priority__gte=1, priority__lte=10), name="priority"),
         ]
 
@@ -108,7 +111,7 @@ class MissionPrerequisites(models.Model):
         return f"{self.mission} needs {self.prerequisite}"
 
     class Meta:
-        indexes = [
+        indexes: ClassVar[list[models.Index]] = [
             models.Index(fields=["mission"]),
         ]
 
@@ -134,7 +137,7 @@ class RecruitMission(models.Model):
         return f"{self.recruit} doing {self.mission}"
 
     class Meta:
-        indexes = [
+        indexes: ClassVar[list[models.Index]] = [
             models.Index(fields=["recruit", "completed"]),
         ]
 

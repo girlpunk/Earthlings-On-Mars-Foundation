@@ -4,3 +4,14 @@ PRINT_ALPACA: false
 
 DISABLE_LINTERS:
   - "SPELL_CSPELL"
+  - "SPELL_LYCHEE"
+  - "HTML_HTMLHINT"
+
+PRE_COMMAND:
+  - command: python3 -m pip install hatch
+    venv: pylint
+    continue_if_failed: false
+
+  - command: python3 -m hatch run true
+    venv: pylint
+    continue_if_failed: false

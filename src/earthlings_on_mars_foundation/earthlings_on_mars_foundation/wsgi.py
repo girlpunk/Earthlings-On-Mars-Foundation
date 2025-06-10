@@ -1,5 +1,5 @@
 """
-WSGI config for earthlingsOnMarsFoundation project.
+WSGI config for earthlings_on_mars_foundation project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 
@@ -11,6 +11,6 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'earthlingsOnMarsFoundation.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'earthlings_on_mars_foundation.settings')
 
 application = get_wsgi_application()

@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: 2025-present Foxocube <git@foxocube.xyz>
 #
 # SPDX-License-Identifier: MIT
+import logging
+
 import click
 import requests
 
@@ -37,6 +39,6 @@ def call(url, call_from, digits):
 
 def display_response(response):
     if response["verb"] == "gather":
-        print(response["say"]["text"])
+        logging.info("Gather: %s", response["say"]["text"])
     elif response["verb"] == "say":
-        print(response["text"])
+        logging.info("Say: %s", response["text"])

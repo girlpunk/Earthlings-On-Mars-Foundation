@@ -37,10 +37,10 @@ Source = "https://github.com/Foxocube/earthlings-on-mars-foundation"
 
 [project.scripts]
 console = "console.cli:earthlings_on_mars_foundation"
-manager = "earthlingsOnMarsFoundation.manage:main"
+manager = "earthlings_on_mars_foundation.manage:main"
 
 [tool.hatch.version]
-path = "src/earthlingsOnMarsFoundation/__about__.py"
+path = "src/earthlings_on_mars_foundation/__about__.py"
 
 [tool.hatch.envs.types]
 extra-dependencies = [
@@ -54,7 +54,7 @@ source_pkgs = ["earthlings_on_mars_foundation", "tests"]
 branch = true
 parallel = true
 omit = [
-  "src/earthlingsOnMarsFoundation/__about__.py",
+  "src/earthlings_on_mars_foundation/__about__.py",
 ]
 
 [tool.coverage.paths]

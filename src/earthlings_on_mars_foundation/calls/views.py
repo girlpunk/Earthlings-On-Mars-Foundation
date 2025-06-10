@@ -21,7 +21,6 @@ def new_call_identified(request, npc_id):
     try:
         recruit_id = request.POST["dtmf"]
     except KeyError:
-        print(request.POST)
         # Redisplay the question voting form.
         return HttpResponseRedirect(request.build_absolute_uri(reverse("new_call", kwargs={"npc_id": npc_id})))
 
@@ -49,16 +48,16 @@ def new_call_identified(request, npc_id):
         return JsonResponse(jambon.say("Unable to identify what NPC you are calling"))
 
     # TODO: Check for any "call NPC" missions going to this NPC, complete if needed
-    call_npc_missions = models.RecruitMission.objects.filter(recruit=recruit, mission__type==models.MissionTypes.NPC, completed=False)
+    call_npc_missions = models.RecruitMission.objects.filter(recruit=recruit, mission__type=models.MissionTypes.NPC, completed=False)
 
-    for mission in call_npc_missions
+    for mission in call_npc_missions:
         output += _complete_mission(mission)
 
 
-    only_start_from = models.ForeignKey("Location", on_delete=models.PROTECT, null=True, blank=True, related_name="only_start_from", help_text="If set, this mission can only be started from the specified locatio>
-    prerequisites = models.ManyToManyField("self", through="MissionPrerequisites", related_name="prerequisites", through_fields=('mission', 'prerequisite'))
-    instances = models.ManyToManyField(Recruit, through="RecruitMission")
-    repeatable = models.BooleanField()
+    #only_start_from = models.ForeignKey("Location", on_delete=models.PROTECT, null=True, blank=True, related_name="only_start_from", help_text="If set, this mission can only be started from the specified locatio>
+    #prerequisites = models.ManyToManyField("self", through="MissionPrerequisites", related_name="prerequisites", through_fields=('mission', 'prerequisite'))
+    #instances = models.ManyToManyField(Recruit, through="RecruitMission")
+    #repeatable = models.BooleanField()
 
 
 
@@ -91,3 +90,4 @@ def _complete_mission(recruitMission):
 def _start_mission(mission, recruit):
     # create RecruitMission
     # get output
+    pass
