@@ -25,7 +25,11 @@ SECRET_KEY = 'django-insecure-zhxc(@3^y^hxralj_*++nx&qh((&4wsy4lj)6k-!%+nsc1y!*s
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    '64a5a1f57b59cb.lhr.life'
+]
 
 
 # Application definition
@@ -48,6 +52,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'calls.middleware.SessionLogMiddleware',
 ]
 
 ROOT_URLCONF = 'earthlings_on_mars_foundation.urls'

@@ -1,93 +1,234 @@
+import contextlib
+import json
 from datetime import datetime
 
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.urls import reverse
+from django.db.models import Q, F, OuterRef, Exists, Count, Subquery
 
 from . import jambon, models
 
 
 def index(request):
-    return HttpResponse("Hello, world. You're at the polls index.")
+    return HttpResponse("Hello, world.")
 
 
-def new_call(request, npc_id):
-    return JsonResponse(jambon.gather(
-        "Please enter your recruit number to connect your call. If you've lost your multipass and need a replacement recruit number, press 0",
-        request.build_absolute_uri(reverse("new_call_identified", kwargs={"npc_id": npc_id})),
-        min_digits=1,
-        max_digits=4), safe=False)
+def new_call(request):
+    return JsonResponse(
+        [jambon.gather(
+            "Please enter your recruit number to connect your call. If you've lost your multipass and need a replacement recruit number, press 0",
+            request.build_absolute_uri(reverse("identified")),
+            min_digits=1,
+            max_digits=4
+        )],
+        safe=False)
 
-def new_call_identified(request, npc_id):
-    try:
-        recruit_id = request.POST["dtmf"]
-    except KeyError:
-        # Redisplay the question voting form.
-        return HttpResponseRedirect(request.build_absolute_uri(reverse("new_call", kwargs={"npc_id": npc_id})))
-
+def identified(request):
+    body = json.loads(request.body)
     output = []
+    digits = 0
+
+    if "digits" not in body or ( body["reason"] == "timeout" and body["digits"] != "0") or body["reason"] == "error":
+        # Prompt for the input again
+        return HttpResponseRedirect(request.build_absolute_uri(reverse("new_call")))
+
+    recruit_id = body["digits"]
 
     if recruit_id == "0":
         # New recruit
         recruit = models.Recruit()
         recruit.save()
-        output += [jambon.say(f"OK let's see, scanner says you're recruit {recruit.id}. You got that? {recruit.id}, don't forget it.")]
+
+        number = " ".join(f"{recruit.id:04}")
+
+        output += [jambon.say(f"OK let's see, scanner says you're recruit {number}. You got that? {number}, don't forget it!")]
+        digits = 1
     else:
         # Existing recruit
-        recruit = models.Recruit.objects.get(id=recruit_id)
+        try:
+            recruit = models.Recruit.objects.get(id=recruit_id)
+        except models.Recruit.DoesNotExist:
+            # Verify the recruit number
+            return JsonResponse([jambon.say("Sorry, that number was not recognised")], safe=False)
 
-        # Verify the recruit number
-        if recruit is None or len(recruit) == 0:
-            return JsonResponse(jambon.say("Sorry, that number was not recognised"))
-
-        output += jambon.say("Caller verified!")
+        output += [jambon.say("Caller verified!")]
+        digits = 4
 
     # Find what NPC is being called
-    npc = models.NPC.objects.get(extension=request.GET["call_to"])
+    try:
+        npc = models.NPC.objects.get(extension=body["to"])
+    except models.NPC.DoesNotExist:
+        return JsonResponse([jambon.say("Unable to identify what NPC you are calling")])
 
-    if npc is None:
-        return JsonResponse(jambon.say("Unable to identify what NPC you are calling"))
+    recruit_npc, created = models.RecruitNPC.objects.get_or_create(recruit=recruit, NPC=npc)
 
-    # TODO: Check for any "call NPC" missions going to this NPC, complete if needed
-    call_npc_missions = models.RecruitMission.objects.filter(recruit=recruit, mission__type=models.MissionTypes.NPC, completed=False)
+    if created or not recruit_npc.contacted:
+        output += [jambon.say(npc.introduction)]
+        recruit_npc.contacted = True
+        recruit_npc.save()
 
-    for mission in call_npc_missions:
-        output += _complete_mission(mission)
-
-
-    #only_start_from = models.ForeignKey("Location", on_delete=models.PROTECT, null=True, blank=True, related_name="only_start_from", help_text="If set, this mission can only be started from the specified locatio>
-    #prerequisites = models.ManyToManyField("self", through="MissionPrerequisites", related_name="prerequisites", through_fields=('mission', 'prerequisite'))
-    #instances = models.ManyToManyField(Recruit, through="RecruitMission")
-    #repeatable = models.BooleanField()
+    location = _find_location(body["from"])
+    _add_details_to_call(body["call_sid"], recruit, npc, location, digits)
 
 
+    #Check for any "call NPC" missions going to this NPC, complete if needed
+    npc_missions = models.RecruitMission.objects.filter(recruit=recruit, mission__type=models.MissionTypes.NPC, mission__call_another=npc, completed=False)
+
+    for mission in npc_missions:
+        output += [_complete_mission(mission)]
 
 
+    # Check for any "call from location" missions from this NPC, complete if needed
+    location_missions = models.RecruitMission.objects.filter(recruit=recruit, mission__type=models.MissionTypes.LOCATION, mission__call_back_from=location, mission__issued_by=npc, completed=False)
 
-    # TODO: Check for any "call from location" missions from this NPC, complete if needed
+    for mission in location_missions:
+        output += [_complete_mission(mission)]
 
-    # TODO: Check for any "get code" missions from this NPC, complete if needed
 
-    # TODO: Check for any existing missions from this NPC, send reminder
+    # Check for any "get code" missions from this NPC, complete if needed
+    code_mission = models.RecruitMission.objects.filter(recruit=recruit, mission__type=models.MissionTypes.CODE, mission__issued_by=npc, completed=False)
 
-    # TODO: Issue new mission
+    if code_mission is not None and len(code_mission) > 0:
+        mission = code_mission[0]
+        # Get code prompt
+        output += [jambon.gather(
+            mission.mission.reminder_text,
+            request.build_absolute_uri(reverse("code", kwargs={"recruit_mission_id": mission.id})),
+            min_digits=1
+        )]
 
+        return JsonResponse(output, safe=False)
+
+    # Check for any existing missions from this NPC, send reminder
+    outstanding_missions = models.RecruitMission.objects.filter(recruit=recruit, mission__issued_by=npc, completed=False)
+
+    if len(outstanding_missions) > 0:
+        for mission in outstanding_missions:
+            output += [jambon.say(mission.reminder_text)]
+        return JsonResponse(output, safe=False)
+
+    # Issue new mission
+    output += [_get_mission(recruit, npc, location)]
+
+    return JsonResponse(output, safe=False)
 
 #"Hey, we've got a pressure anomaly near shaft 4. Can you patch it? Thre should be a phone round there somewhere, give me a call when you get there"
 
+def code(request, recruit_mission_id):
+    body = json.loads(request.body)
+
+    recruit_mission = models.RecruitMission.objects.get(id=recruit_mission_id)
+
+    if body["reason"] == "timeout" or body["reason"] == "error" or "digits" not in body:
+        # Prompt for the input again
+
+        return JsonResponse(
+            [jambon.gather(
+                recruit_mission.mission.reminder_text,
+                request.build_absolute_uri(reverse("code", kwargs={"recruit_mission_id": recruit_mission.id})),
+                min_digits=1
+            )],
+            safe=False
+        )
+
+    code = body["digits"]
+
+    # Add digits to call log
+    _add_details_to_call(body["call_sid"], recruit_mission.recruit, recruit_mission.mission.issued_by, None, len(code))
+
+    if code == recruit_mission.mission.code:
+        # Correct code
+        location = _find_location(body["from"])
+        return JsonResponse([_complete_mission(recruit_mission), _get_mission(recruit_mission.recruit, recruit_mission.mission.issued_by, location)], safe=False)
+
+    # Incorrect code
+    return JsonResponse([jambon.say(recruit_mission.mission.incorrect_text)], safe=False)
+
+def _get_mission(recruit, npc, location):
+    # TODO: Implement
+
+    now = datetime.utcnow()
+
+    possible = models.Mission.objects.annotate( 
+        total_prerequisites=Count('prerequisites'), # Calculate total number of prerequisites
+        completed_prerequisites=Count( # And completed number of prerequisites
+            models.MissionPrerequisite.objects.filter(
+                Q(mission=OuterRef('pk')),
+                Q(Exists(models.RecruitMission.objects.filter(mission=OuterRef('prerequisite__id'), recruit=recruit)))
+            ).values('id')  
+        ) 
+    ).filter(
+        Q(issued_by=npc) & # Issued by the user the NPC is talking to
+        (
+            Q(only_start_from=location) | # Issued from the location the user is calling from
+            Q(only_start_from=None) # Or from any location
+        ) &
+        Q(~Exists(models.RecruitMission.objects.filter(mission=OuterRef('pk'), recruit=recruit, completed=True)) | Q(repeatable=True)) & # User has not already completed, or the mission is repeatable
+        Q(total_prerequisites=F('completed_prerequisites')) & # All prerequisites are complete
+        (Q(not_before__lte=now) | Q(not_before=None)) & # not before is before now (or unset)
+        (Q(not_after__gte=now) | Q(not_after=None)) # Not after is after now (or unset)
+    ).order_by('followup_mission','-priority')
+
+    return jambon.say("I don't have any more work for you at the moment")
+
+def _complete_mission(recruit_mission):
+    recruit_mission.completed = True
+    recruit_mission.finished = datetime.utcnow()
+    recruit_mission.save()
+
+    recruit_mission.recruit.score += recruit_mission.mission.points
+    recruit_mission.recruit.save()
+
+    return jambon.say(recruit_mission.mission.completion_text)
 
 
-def _complete_mission(recruitMission):
-    recruitMission.completed = True
-    recruitMission.finished = datetime.now()
-    recruitMission.save()
+def _add_details_to_call(call_sid, recruit, npc, location, digits):
+    call,created = models.CallLog.objects.get_or_create(
+        call_id=call_sid,
+        defaults={
+            "duration": 0,
+            "digits": 0
+        }
+    )
 
-    recruitMission.recruit.score += recruitMission.mission.points
-    recruitMission.recruit.save()
+    if npc is not None:
+        call.NPC = npc
+    if recruit is not None:
+        call.recruit = recruit
+    if location is not None:
+        call.location = location
+    if digits is not None:
+        call.digits += digits
 
-    return recruitMission.mission.completion_text
+    call.save()
 
+def _find_location(call_from):
+    try:
+        return models.Location.objects.get(extension=call_from)
+    except (ValueError, models.Location.DoesNotExist):
+        return None
 
-def _start_mission(mission, recruit):
-    # create RecruitMission
-    # get output
-    pass
+def status(request):
+    body = json.loads(request.body)
+
+    call,created = models.CallLog.objects.get_or_create(
+        call_id=body['call_sid'],
+        defaults={
+            "duration": 0,
+            "digits": 0
+        }
+    )
+
+    if call.NPC is None:
+        with contextlib.suppress(models.NPC.DoesNotExist):
+            call.NPC = models.NPC.objects.get(extension=body["to"])
+
+    if call.location is None:
+        call.location = _find_location(body["from"])
+
+    if "duration" in body:
+        call.duration = body['duration']
+
+    call.save()
+
+    return HttpResponse("OK")
