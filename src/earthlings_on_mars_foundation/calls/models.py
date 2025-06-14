@@ -9,6 +9,8 @@ from django.db import models
 class Recruit(models.Model):
     # TODO: Reputations
     score = models.IntegerField(default=0)
+    missions = models.ManyToManyField("Mission", through="RecruitMission")
+    NPCs = models.ManyToManyField("NPC", through="RecruitNPC")
 
     def __str__(self):
         return f"Recruit {self.pk}"
@@ -16,14 +18,22 @@ class Recruit(models.Model):
 class NPC(models.Model):
     name = models.CharField(max_length=200, unique=True)
     extension = models.PositiveSmallIntegerField(help_text="What number is dialled (B-Number) to reach this NPC")
+    introduction = models.TextField(help_text="This text is given to the player the first time they call")
+    recruits = models.ManyToManyField(Recruit, through="RecruitNPC")
 
     def __str__(self):
         return self.name
 
     class Meta:
+        verbose_name = "NPC"
         indexes: ClassVar[list[models.Index]] = [
             models.Index(fields=["extension"])
         ]
+
+class RecruitNPC(models.Model):
+    recruit = models.ForeignKey(Recruit, on_delete=models.CASCADE)
+    NPC = models.ForeignKey(NPC, on_delete=models.CASCADE)
+    contacted = models.BooleanField(default=False)
 
 
 class MissionTypes(IntEnum):
@@ -73,7 +83,8 @@ class Mission(models.Model):
     followup_mission = models.ForeignKey("Mission", on_delete=models.PROTECT, null=True, blank=True, help_text="Which mission will automatically be started upon completion of this mission")
     priority = models.PositiveSmallIntegerField(default=5, help_text="If multiple missions are available, ones with higher priorities are preferred")
     only_start_from = models.ForeignKey("Location", on_delete=models.PROTECT, null=True, blank=True, related_name="only_start_from", help_text="If set, this mission can only be started from the specified location")
-    prerequisites = models.ManyToManyField("self", through="MissionPrerequisites", related_name="prerequisites", through_fields=('mission', 'prerequisite'))
+    prerequisites = models.ManyToManyField("self", through="MissionPrerequisite", through_fields=('mission', 'prerequisite'), help_text="Missions that need to be done before this mission")
+    dependents = models.ManyToManyField("self", through="MissionPrerequisite", through_fields=('prerequisite', 'mission'), help_text="Missions that need this mission to be done first")
     instances = models.ManyToManyField(Recruit, through="RecruitMission")
     repeatable = models.BooleanField()
 
@@ -86,13 +97,14 @@ class Mission(models.Model):
     cancel_text = models.TextField(max_length=2000, blank=True, help_text="This text is given to the player when the mission is cancelled")
 
     # Call from a specific location
-    call_back_from = models.ForeignKey(Location, on_delete=models.PROTECT, null=True)
+    call_back_from = models.ForeignKey(Location, on_delete=models.PROTECT, null=True, blank=True)
 
     # Call another NPC
     call_another = models.ForeignKey(NPC, on_delete=models.PROTECT, related_name="call_another", null=True, blank=True)
 
     # Call back with a code from a physical item
     code = models.PositiveIntegerField(null=True, blank=True)
+    incorrect_text = models.TextField(blank=True, help_text="Given to the user when the get the code wrong")
 
     def __str__(self):
         return self.name
@@ -103,7 +115,7 @@ class Mission(models.Model):
         ]
 
 
-class MissionPrerequisites(models.Model):
+class MissionPrerequisite(models.Model):
     mission = models.ForeignKey(Mission, on_delete=models.PROTECT)
     prerequisite = models.ForeignKey(Mission, on_delete=models.PROTECT, related_name="prerequisite")
 
@@ -144,8 +156,9 @@ class RecruitMission(models.Model):
 
 class CallLog(models.Model):
     call_id = models.CharField(unique=True, max_length=64, primary_key=True)
-    recruit = models.ForeignKey(Recruit, on_delete=models.CASCADE)
-    npc = models.ForeignKey(NPC, on_delete=models.CASCADE)
+    recruit = models.ForeignKey(Recruit, on_delete=models.CASCADE, null=True)
+    NPC = models.ForeignKey(NPC, on_delete=models.CASCADE, null=True)
+    location = models.ForeignKey(Location, on_delete=models.CASCADE, null=True)
     date = models.DateTimeField(auto_now_add=True)
     duration = models.PositiveIntegerField()
     digits = models.PositiveIntegerField()
