@@ -7,8 +7,11 @@ def gather(text, callback: str, digits=None, min_digits=None, max_digits=None):
         "bargein": False,
         "dtmfBargein": True,
         "finishOnKey": "#",
-        "say": say(text)
+        "say": say(text),
+        "interDigitTimeout": 5
     }
+
+    del data["say"]["verb"]
 
     if digits is not None:
         data["numDigits"] = digits
