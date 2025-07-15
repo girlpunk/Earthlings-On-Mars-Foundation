@@ -53,6 +53,9 @@ class MissionTypes(IntEnum):
   # Get an arbitrary input, we don't really care what
   COUNT = 5
 
+  # Custom scripted mission
+  LUA = 6
+
 
   @classmethod
   def choices(cls):
@@ -106,6 +109,9 @@ class Mission(models.Model):
     code = models.PositiveIntegerField(null=True, blank=True)
     incorrect_text = models.TextField(blank=True, help_text="Given to the user when the get the code wrong")
 
+    # Lua
+    lua = models.TextField(help_text="Lua script for custom requirements", blank=True)
+
     def __str__(self):
         return self.name
 
@@ -131,8 +137,8 @@ class MissionPrerequisite(models.Model):
 class RecruitMission(models.Model):
     recruit = models.ForeignKey(Recruit, on_delete=models.CASCADE)
     mission = models.ForeignKey(Mission, on_delete=models.CASCADE)
-    started = models.DateTimeField()
-    finished = models.DateTimeField(null=True)
+    started = models.DateTimeField(auto_now_add=True)
+    finished = models.DateTimeField(null=True, blank=True)
     completed = models.BooleanField(default=False)
 
     # Call back with a code from a physical item
@@ -140,10 +146,12 @@ class RecruitMission(models.Model):
 
     # Two players complete an action at the same time
     # TODO: Implement
-    #TOGETHER = 4
 
     # Get an arbitrary input, we don't really care what
     count_value = models.PositiveIntegerField(null=True)
+
+    # Lua state
+    state = models.JSONField(default=dict, blank=True)
 
     def __str__(self):
         return f"{self.recruit} doing {self.mission}"
@@ -156,12 +164,19 @@ class RecruitMission(models.Model):
 
 class CallLog(models.Model):
     call_id = models.CharField(unique=True, max_length=64, primary_key=True)
-    recruit = models.ForeignKey(Recruit, on_delete=models.CASCADE, null=True)
-    NPC = models.ForeignKey(NPC, on_delete=models.CASCADE, null=True)
-    location = models.ForeignKey(Location, on_delete=models.CASCADE, null=True)
+    recruit = models.ForeignKey(Recruit, on_delete=models.CASCADE, null=True, blank=True)
+    NPC = models.ForeignKey(NPC, on_delete=models.CASCADE, null=True, blank=True)
+    location = models.ForeignKey(Location, on_delete=models.CASCADE, null=True, blank=True)
     date = models.DateTimeField(auto_now_add=True)
-    duration = models.PositiveIntegerField()
-    digits = models.PositiveIntegerField()
+    duration = models.PositiveIntegerField(default=0)
+    digits = models.PositiveIntegerField(default=0)
+    completed = models.BooleanField(default=False)
+    success = models.BooleanField(default=False)
 
     def __str__(self):
         return self.call_id
+
+class Speech(models.Model):
+    NPC = models.ForeignKey(NPC, on_delete=models.CASCADE, null=True, blank=True)
+    text = models.TextField()
+    recording = models.FileField()

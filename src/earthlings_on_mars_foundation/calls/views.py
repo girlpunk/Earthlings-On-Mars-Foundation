@@ -2,11 +2,11 @@ import contextlib
 import json
 from datetime import datetime
 
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.db.models import Count, Exists, F, OuterRef, Q
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse, FileResponse
 from django.urls import reverse
-from django.db.models import Q, F, OuterRef, Exists, Count, Subquery
 
-from . import jambon, models
+from calls import jambon, models
 
 
 def index(request):
@@ -104,7 +104,7 @@ def identified(request):
 
     if len(outstanding_missions) > 0:
         for mission in outstanding_missions:
-            output += [jambon.say(mission.reminder_text)]
+            output += [jambon.say(mission.mission.reminder_text)]
         return JsonResponse(output, safe=False)
 
     # Issue new mission
@@ -136,7 +136,7 @@ def code(request, recruit_mission_id):
     # Add digits to call log
     _add_details_to_call(body["call_sid"], recruit_mission.recruit, recruit_mission.mission.issued_by, None, len(code))
 
-    if code == recruit_mission.mission.code:
+    if code == str(recruit_mission.mission.code):
         # Correct code
         location = _find_location(body["from"])
         return JsonResponse([_complete_mission(recruit_mission), _get_mission(recruit_mission.recruit, recruit_mission.mission.issued_by, location)], safe=False)
@@ -145,18 +145,17 @@ def code(request, recruit_mission_id):
     return JsonResponse([jambon.say(recruit_mission.mission.incorrect_text)], safe=False)
 
 def _get_mission(recruit, npc, location):
-    # TODO: Implement
-
     now = datetime.utcnow()
 
-    possible = models.Mission.objects.annotate( 
+    mission = models.Mission.objects.annotate(
         total_prerequisites=Count('prerequisites'), # Calculate total number of prerequisites
         completed_prerequisites=Count( # And completed number of prerequisites
             models.MissionPrerequisite.objects.filter(
                 Q(mission=OuterRef('pk')),
                 Q(Exists(models.RecruitMission.objects.filter(mission=OuterRef('prerequisite__id'), recruit=recruit)))
-            ).values('id')  
-        ) 
+            ).values('id')
+        ),
+        followup_to=Count('mission')
     ).filter(
         Q(issued_by=npc) & # Issued by the user the NPC is talking to
         (
@@ -167,9 +166,20 @@ def _get_mission(recruit, npc, location):
         Q(total_prerequisites=F('completed_prerequisites')) & # All prerequisites are complete
         (Q(not_before__lte=now) | Q(not_before=None)) & # not before is before now (or unset)
         (Q(not_after__gte=now) | Q(not_after=None)) # Not after is after now (or unset)
-    ).order_by('followup_mission','-priority')
+    ).order_by(
+        '-followup_to',
+        '-priority'
+    ).first()
 
-    return jambon.say("I don't have any more work for you at the moment")
+    if mission is None:
+        return jambon.say("I don't have any more work for you at the moment, give me a call back later.")
+
+    recruitMission = models.RecruitMission()
+    recruitMission.recruit = recruit
+    recruitMission.mission = mission
+    recruitMission.save()
+
+    return jambon.say(mission.give_text)
 
 def _complete_mission(recruit_mission):
     recruit_mission.completed = True
@@ -232,3 +242,8 @@ def status(request):
     call.save()
 
     return HttpResponse("OK")
+
+def speech(request, id):
+    recording: models.Speech.get(id=id)
+
+    return FileResponse(request, recording.recording)

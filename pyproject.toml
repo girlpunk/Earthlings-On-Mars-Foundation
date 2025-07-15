@@ -27,7 +27,11 @@ classifiers = [
 dependencies = [
   "click",
   "django",
-  "requests"
+  "requests",
+  "channels",
+  "daphne",
+  "lupa",
+  "django-editor-widgets"
 ]
 
 [project.urls]

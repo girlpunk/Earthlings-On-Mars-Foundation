@@ -53,7 +53,7 @@ class SessionLogMiddleware(MiddlewareMixin):
             with contextlib.suppress(Exception):
                 request_data = self.clean_text(request.body)
 
-        if headers["CONTENT_TYPE"] != "application/x-www-form-urlencoded":
+        if "CONTENT_TYPE" not in headers or headers["CONTENT_TYPE"] != "application/x-www-form-urlencoded":
             try:
                 response_data = json.loads(self.clean_text(response.content))
             except RawPostDataException:

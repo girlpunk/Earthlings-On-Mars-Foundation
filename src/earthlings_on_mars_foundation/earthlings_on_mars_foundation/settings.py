@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+from djangoeditorwidgets.config import init_web_editor_config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -28,20 +29,26 @@ DEBUG = True
 ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
-    '64a5a1f57b59cb.lhr.life'
+    '10g8fdqt-8000.uks1.devtunnels.ms',
+    "10g8fdqt.uks1.devtunnels.ms",
+    "*.lhr.life",
+    "706d893da67a6f.lhr.life"
 ]
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'channels',
     'calls.apps.CallsConfig',
+    'djangoeditorwidgets',
 ]
 
 MIDDLEWARE = [
@@ -73,7 +80,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'earthlings_on_mars_foundation.wsgi.application'
-
+ASGI_APPLICATION = "earthlings_on_mars_foundation.asgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
@@ -108,9 +115,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'en-gb'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/London'
 
 USE_I18N = True
 
@@ -130,3 +137,19 @@ STATICFILES_DIRS = [
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    },
+}
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
+WEB_EDITOR_DOWNLOAD, WEB_EDITOR_CONFIG = init_web_editor_config(
+    # set the directory where files are downloaded
+    STATICFILES_DIRS[0],
+    # set static url prefix
+    ""
+)

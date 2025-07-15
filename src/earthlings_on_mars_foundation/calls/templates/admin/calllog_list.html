@@ -1,0 +1,46 @@
+{% extends "admin/change_list.html" %}
+
+{% block object-tools %}
+<div style="display: flex; flex-direction: row; justify-content: space-between; color: var(--header-link-color);">
+  <div style="display: flex; flex-direction: row; gap: 20px;">
+      <div style="padding: 20px; background: var(--header-bg); border-radius: 15px;">
+        <div style="font-size: 1.25rem; font-weight: 500;text-align: right;">{{ current_calls }}</div>
+        <div style="font-weight: 300; font-size: 0.8125rem;">Current Calls</div>
+      </div>
+      <div style="padding: 20px; background: var(--header-bg); border-radius: 15px;">
+        <div style="font-size: 1.25rem; font-weight: 500;text-align: right;">{{ total_calls_today }}</div>
+        <div style="font-weight: 300; font-size: 0.8125rem;">Calls Today</div>
+      </div>
+      <div style="padding: 20px; background: var(--header-bg); border-radius: 15px;">
+        <div style="font-size: 1.25rem; font-weight: 500;text-align: right;">{{ failed_calls_today }}</div>
+        <div style="font-weight: 300; font-size: 0.8125rem;">Failed Calls Today</div>
+      </div>
+  </div>
+  <div style="display: flex; flex-direction: row; gap: 20px;">
+      <div style="padding: 20px; background: var(--header-bg); border-radius: 15px;">
+        <div style="font-size: 1.25rem; font-weight: 500;text-align: right;">{{ digits_today }}</div>
+        <div style="font-weight: 300; font-size: 0.8125rem;">Digits Entered Today</div>
+      </div>
+      <div style="padding: 20px; background: var(--header-bg); border-radius: 15px;">
+        <div style="font-size: 1.25rem; font-weight: 500;text-align: right;">{{ duration_today }}s</div>
+        <div style="font-weight: 300; font-size: 0.8125rem;">Duration Today</div>
+      </div>
+  </div>
+  <div style="display: flex; flex-direction: row; gap: 20px;">
+      <div style="padding: 20px; background: var(--header-bg); border-radius: 15px;">
+        <div style="font-size: 1.25rem; font-weight: 500;text-align: right;">{{ total_calls }}</div>
+        <div style="font-weight: 300; font-size: 0.8125rem;">Total Calls</div>
+      </div>
+      <div style="padding: 20px; background: var(--header-bg); border-radius: 15px;">
+        <div style="font-size: 1.25rem; font-weight: 500;text-align: right;">{{ total_digits }}</div>
+        <div style="font-weight: 300; font-size: 0.8125rem;">Total Digits Entered</div>
+      </div>
+      <div style="padding: 20px; background: var(--header-bg); border-radius: 15px;">
+        <div style="font-size: 1.25rem; font-weight: 500;text-align: right;">{{ total_duration }}s</div>
+        <div style="font-weight: 300; font-size: 0.8125rem;">Total Duration</div>
+      </div>
+  </div>
+</div>
+
+  {{ block.super }}
+{% endblock %}
