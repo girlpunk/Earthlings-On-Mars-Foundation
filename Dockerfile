@@ -9,4 +9,4 @@ COPY . .
 
 EXPOSE 8000
 #USER $APP_UID
-ENTRYPOINT ["nix-shell", "--command", "./src/earthlings_on_mars_foundation/manage.py runserver 0.0.0.0:8000"]
+ENTRYPOINT ["nix-shell", "--command", "cd src/earthlings_on_mars_foundation; daphne -b 0.0.0.0 earthlings_on_mars_foundation.asgi:application"]

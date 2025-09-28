@@ -8,13 +8,19 @@ https://docs.djangoproject.com/en/5.2/howto/deployment/asgi/
 """
 
 import os
-
-from channels.routing import ProtocolTypeRouter, URLRouter
 from django.core.asgi import get_asgi_application
 
-from earthlings_on_mars_foundation.routing import websocket_urlpatterns
+# Fetch Django ASGI application early to ensure AppRegistry is populated
+# before importing consumers and AuthMiddlewareStack that may import ORM
+# models.
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'earthlings_on_mars_foundation.settings')
+django_asgi_app = get_asgi_application()
+
+from channels.routing import ProtocolTypeRouter, URLRouter
+from django.conf import settings
+from django.core.asgi import get_asgi_application
+from .routing import websocket_urlpatterns
 
 application = ProtocolTypeRouter(
     {
