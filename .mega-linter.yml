@@ -2,12 +2,19 @@
 IGNORE_GITIGNORED_FILES: true
 PRINT_ALPACA: false
 
+EXCLUDED_DIRECTORIES:
+  - "src/earthlings_on_mars_foundation/static/tinymce"
+  - "src/earthlings_on_mars_foundation/static_cdn/tinymce"
+  - "src/earthlings_on_mars_foundation/static_root"
+  - "src/earthlings_on_mars_foundation/static/monaco"
+  - "src/earthlings_on_mars_foundation/static_cdn/monaco"
+
 DISABLE_LINTERS:
   - "SPELL_CSPELL"
   - "SPELL_LYCHEE"
   - "HTML_HTMLHINT"
 
-PRE_COMMAND:
+PRE_COMMANDS:
   - command: python3 -m pip install hatch
     venv: pylint
     continue_if_failed: false

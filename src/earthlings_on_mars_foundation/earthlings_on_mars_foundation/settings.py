@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 import logging
 import logging.config
+import os
 
 from pathlib import Path
 from djangoeditorwidgets.config import init_web_editor_config
@@ -181,7 +182,7 @@ def _parse_db_settings() -> dict:
     databases = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
-            "NAME": DATA_DIR / "db.sqlite3",
+            "NAME": "db.sqlite3",
             "OPTIONS": {},
         },
     }
