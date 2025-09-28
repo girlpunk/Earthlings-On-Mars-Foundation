@@ -1,10 +1,31 @@
 { pkgs ? import <nixpkgs> {} }:
 let
+  python-ovr = pkgs.python3.override {
+    self = pkgs.python3;
+    packageOverrides = final: prev: {
+      django = final.django_5;
+    };
+  };
+
+  python-pkg = (python-ovr.withPackages( python-pkgs: with python-pkgs; [
+      channels
+      click
+      daphne
+      django_5
+      lupa
+      pillow
+      requests
+    ]));
+
   editor-widgets = { python3, fetchurl }:
     with python3.pkgs;
     buildPythonApplication rec {
       pname = "django-editor-widgets";
       version = "1";
+
+      # https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/interpreters/python/mk-python-derivation.nix#L190
+      format = "pyproject";
+      nativeBuildInputs = [ python-pkg ];
 
       src = pkgs.fetchFromGitHub {
         owner = "giorgi94";
@@ -14,26 +35,13 @@ let
       };
 
       # By default tests are executed, but they need to be invoked differently for this package
+      doCheck = false;
       dontUseSetuptoolsCheck = true;
     };
-
-  python = pkgs.python3.override {
-    self = python;
-    packageOverrides = final: prev: {
-      django = final.django_5;
-    };
-  };
 in
 pkgs.mkShell {
   packages = [
-    (python.withPackages( python-pkgs: with python-pkgs; [
-      channels
-      click
-      daphne
-      django_5
-      lupa
-      requests
-    ]))
+    python-pkg
     (pkgs.callPackage editor-widgets {})
   ];
 }
