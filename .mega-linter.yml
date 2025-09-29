@@ -27,3 +27,4 @@ PRE_COMMANDS:
 PYTHON_PYLINT_PRE_COMMANDS:
   - command: "python3 -m pip install hatch"
   - command: "python3 -m hatch run true"
+  - command: "python3 -m pip install click django requests channels daphne lupa django-editor-widgets"
