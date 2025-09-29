@@ -25,9 +25,5 @@ PRE_COMMANDS:
 
 
 PYTHON_PYLINT_PRE_COMMANDS:
-  - command: python3 -m pip install hatch
-    venv: pylint
-    continue_if_failed: false
-  - command: python3 -m hatch run true
-    venv: pylint
-    continue_if_failed: false
+  - python3 -m pip install hatch
+  - python3 -m hatch run true
