@@ -2,7 +2,7 @@
 IGNORE_GITIGNORED_FILES: true
 PRINT_ALPACA: false
 
-EXCLUDED_DIRECTORIES:
+FILTER_REGEX_EXCLUDE:
   - "src/earthlings_on_mars_foundation/static/tinymce"
   - "src/earthlings_on_mars_foundation/static_cdn/tinymce"
   - "src/earthlings_on_mars_foundation/static_root"
@@ -19,6 +19,15 @@ PRE_COMMANDS:
     venv: pylint
     continue_if_failed: false
 
+  - command: python3 -m hatch run true
+    venv: pylint
+    continue_if_failed: false
+
+
+PYTHON_PYLINT_PRE_COMMANDS:
+  - command: python3 -m pip install hatch
+    venv: pylint
+    continue_if_failed: false
   - command: python3 -m hatch run true
     venv: pylint
     continue_if_failed: false
