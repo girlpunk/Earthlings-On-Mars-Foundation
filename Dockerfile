@@ -6,6 +6,7 @@ RUN nix-build -A python3 '<nixpkgs>'
 
 WORKDIR /app
 COPY . .
+RUN nix-shell --command "cd src/earthlings_on_mars_foundation; exit"
 
 EXPOSE 8000
 #USER $APP_UID
