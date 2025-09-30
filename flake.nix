@@ -59,6 +59,8 @@
           ];
         };
 
+        # https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/interpreters/python/python-packages-base.nix
+        # https://github.com/NixOS/nixpkgs/blob/master/pkgs/build-support/setup-hooks/make-wrapper.sh
         packages.app = python-ovr.pkgs.buildPythonApplication rec {
           name = "app";
           src = ./.;
