@@ -75,6 +75,16 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'calls.apps.CallsConfig',
     'djangoeditorwidgets',
+    'health_check',                             # required
+    'health_check.db',                          # stock Django health checkers
+    'health_check.cache',
+    'health_check.storage',
+    'health_check.contrib.migrations',
+    #    'health_check.contrib.celery',              # requires celery
+    #    'health_check.contrib.celery_ping',         # requires celery
+    #    'health_check.contrib.rabbitmq',            # requires RabbitMQ broker
+    #    'health_check.contrib.redis',               # requires Redis broker
+    'health_check.contrib.db_heartbeat',
 ]
 
 if DEBUG:

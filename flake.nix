@@ -71,15 +71,16 @@
           '';
 
           propagatedBuildInputs = with pkgs.python313Packages; [
-            (pkgs.callPackage django-editor-widgets {})
             channels
             click
             daphne
             django_5
+            django-health-check
             lupa
             pillow
-            requests
+            (pkgs.callPackage django-editor-widgets {})
             psycopg2
+            requests
           ];
         };
       in
