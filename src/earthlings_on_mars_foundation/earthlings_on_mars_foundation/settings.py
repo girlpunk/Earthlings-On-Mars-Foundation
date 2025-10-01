@@ -84,7 +84,7 @@ INSTALLED_APPS = [
     #    'health_check.contrib.celery_ping',         # requires celery
     #    'health_check.contrib.rabbitmq',            # requires RabbitMQ broker
     #    'health_check.contrib.redis',               # requires Redis broker
-    'health_check.contrib.db_heartbeat',
+    #'health_check.contrib.db_heartbeat',
 ]
 
 if DEBUG:
