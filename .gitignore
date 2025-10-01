@@ -13,7 +13,6 @@ media
 
 # If your build process includes running collectstatic, then you probably don't need or want to include staticfiles/
 # in your Git repository. Update and uncomment the following line accordingly.
-src/earthlings_on_mars_foundation/static/
 src/earthlings_on_mars_foundation/static_cdn/
 
 ### Django.Python Stack ###

@@ -53,8 +53,9 @@ DEBUG = __get_boolean("DEBUG", "NO")
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 STATICFILES_DIRS = [
-    BASE_DIR / "static",
+    BASE_DIR / "static_cdn",
 ]
+STATIC_ROOT = BASE_DIR / "static"
 
 MEDIA_ROOT = BASE_DIR / "media"
 MEDIA_URL = "/media/"
@@ -96,7 +97,7 @@ ROOT_URLCONF = 'earthlings_on_mars_foundation.urls'
 WSGI_APPLICATION = 'earthlings_on_mars_foundation.wsgi.application'
 ASGI_APPLICATION = "earthlings_on_mars_foundation.asgi.application"
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 
 TEMPLATES = [
     {
