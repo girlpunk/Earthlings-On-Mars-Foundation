@@ -65,8 +65,9 @@
               --prefix PYTHONPATH : ${pkgs.python313Packages.makePythonPath propagatedBuildInputs} \
               --chdir "$out/earthlings_on_mars_foundation" \
               --run "${pkgs.python313}/bin/python manage.py migrate --no-input" \
-              --run "${pkgs.python313}/bin/python manage.py collectstatic --no-input --link" \
               --add-flags "-b 0.0.0.0 earthlings_on_mars_foundation.asgi:application"
+            cd "$out/earthlings_on_mars_foundation"
+            ${pkgs.python313}/bin/python manage.py collectstatic --no-input --link
           '';
 
           propagatedBuildInputs = with pkgs.python313Packages; [
