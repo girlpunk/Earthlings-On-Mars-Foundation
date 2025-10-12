@@ -108,6 +108,7 @@
               caCertificates
               fakeNss
               bash
+              coreutils
             ];
           });
 
