@@ -227,9 +227,9 @@ jobs:
       # https://github.com/docker/build-push-action
 
       - run: |
-        docker load < result
-        docker image tag ghcr.io/girlpunk/earthlings-on-mars-foundation:latest ${{ steps.meta.outputs.tags }}
-        docker push ${{ steps.meta.outputs.tags }}
+          docker load < result
+          docker image tag ghcr.io/girlpunk/earthlings-on-mars-foundation:latest ${{ steps.meta.outputs.tags }}
+          docker push ${{ steps.meta.outputs.tags }}
 #      - name: "Build and push"
 #        uses: "docker/build-push-action@v6"
 #        with:
