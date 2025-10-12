@@ -107,6 +107,7 @@
               binSh
               caCertificates
               fakeNss
+              bash
             ];
           });
 
