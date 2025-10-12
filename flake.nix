@@ -93,6 +93,22 @@
 
           packages.earthlings_on_mars_foundation = app;
           defaultPackage = packages.earthlings_on_mars_foundation;
+          container = (callPackage pkgs.dockerTools.buildLayeredImage {
+            name = "ghcr.io/girlpunk/earthlings-on-mars-foundation";
+            tag = "latest";
+
+            config = {
+              Cmd = [ "${app}/bin/app" ];
+              Expose = [8000];
+            };
+
+            copyToRoot = with pkgs.dockerTools; [
+              usrBinEnv
+              binSh
+              caCertificates
+              fakeNss
+            ];
+          });
 
           formatter = pkgs.alejandra;
         }

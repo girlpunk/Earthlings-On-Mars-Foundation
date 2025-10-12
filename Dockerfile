@@ -5,9 +5,9 @@ WORKDIR /tmp/build
 RUN nix \
     --extra-experimental-features "nix-command flakes" \
     --option filter-syscalls false \
-    build --show-trace
-RUN mkdir /tmp/nix-store-closure
-RUN cp -R $(nix-store -qR result/) /tmp/nix-store-closure
+    build --show-trace && \
+  mkdir /tmp/nix-store-closure && \
+  cp -R "$(nix-store -qR result/)" /tmp/nix-store-closure
 
 #RUN nix-env --install busybox
 #RUN addgroup -S appgroup && adduser -S appuser -G appgroup
