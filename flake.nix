@@ -93,7 +93,7 @@
 
           packages.earthlings_on_mars_foundation = app;
           defaultPackage = packages.earthlings_on_mars_foundation;
-          container = (callPackage pkgs.dockerTools.buildLayeredImage {
+          container = (pkgs.dockerTools.buildImage {
             name = "ghcr.io/girlpunk/earthlings-on-mars-foundation";
             tag = "latest";
 
