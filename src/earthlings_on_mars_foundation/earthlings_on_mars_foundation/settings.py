@@ -137,6 +137,9 @@ WEB_EDITOR_DOWNLOAD, WEB_EDITOR_CONFIG = init_web_editor_config(
     ""
 )
 
+del WEB_EDITOR_DOWNLOAD["tinymce"]
+del WEB_EDITOR_DOWNLOAD["monaco"]
+
 ###############################################################################
 # Security                                                                    #
 ###############################################################################
