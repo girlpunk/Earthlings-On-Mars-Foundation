@@ -158,6 +158,7 @@ if ALLOWED_HOSTS != ["*"]:
     # always allow localhost. Necessary e.g. for healthcheck in docker.
     ALLOWED_HOSTS.append("localhost")
 
+CSRF_TRUSTED_ORIGINS = __get_list("CSRF_TRUSTED_ORIGINS")
 TRUSTED_PROXIES = __get_list("TRUSTED_PROXIES")
 
 USE_X_FORWARDED_HOST = __get_boolean("USE_X_FORWARD_HOST", "false")
