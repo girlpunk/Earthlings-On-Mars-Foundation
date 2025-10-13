@@ -66,9 +66,12 @@
               --chdir "$out/earthlings_on_mars_foundation" \
               --run "${pkgs.python313}/bin/python manage.py migrate --no-input" \
               --add-flags "-b 0.0.0.0 earthlings_on_mars_foundation.asgi:application"
+
             makeWrapper ${pkgs.python313}/bin/python $out/bin/manage \
-              --add-flags manage.py \
-              --chdir "$out/earthlings_on_mars_foundation"
+              --prefix PYTHONPATH : ${pkgs.python313Packages.makePythonPath propagatedBuildInputs} \
+              --chdir "$out/earthlings_on_mars_foundation" \
+              --add-flags manage.py
+
             cd "$out/earthlings_on_mars_foundation"
             ${pkgs.python313}/bin/python manage.py collectstatic --no-input --link
           '';
