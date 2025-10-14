@@ -190,15 +190,18 @@
         );
       in
         with pkgs; rec {
-          devShell = mkShell {
+          devShells.default = mkShell {
             packages = [
               app
             ];
           };
 
-          packages.earthlings_on_mars_foundation = app;
-          defaultPackage = packages.earthlings_on_mars_foundation;
-          container = pkgs.dockerTools.buildImage {
+          apps.default = {
+            type = "app";
+            program = "${app}/bin/manage";
+          };
+          packages.default = app;
+          packages.container = pkgs.dockerTools.buildImage {
             name = "ghcr.io/girlpunk/earthlings-on-mars-foundation";
             tag = "latest";
 
@@ -220,7 +223,13 @@
 
           formatter = treefmt.config.build.wrapper;
           checks = {
-            formatting = treefmt.config.build.check self;
+#            formatting = treefmt.config.build.check self;
+            django-check = pkgs.writeShellScript "django-check.sh" ''
+              ${pkgs.python313}/bin/python src/earthlings_on_mars_foundation/manage.py check
+            '';
+            django-test = pkgs.writeShellScript "django-test.sh" ''
+              ${pkgs.python313}/bin/python src/earthlings_on_mars_foundation/manage.py test
+            '';
           };
         }
     );

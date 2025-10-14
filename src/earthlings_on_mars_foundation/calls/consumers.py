@@ -237,7 +237,7 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
         digits=None,
         min_digits=None,
         max_digits=None,
-    ) -> [string, string]:
+    ) -> [str, str]:
         command = {
             "input": ["digits"],  # Can also include "speech"
             "actionHook": "wss://fa8340b16a8854.lhr.life/ws/call/",
