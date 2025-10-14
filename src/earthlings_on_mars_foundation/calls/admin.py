@@ -189,7 +189,7 @@ def actual_load_from_repo():
                     pk=mission["id"],
                     defaults={
                         "pk": mission["id"],
-                        "type": mission["type"],
+                        "type": models.MissionTypes[mission["type"]],
                     },
                 )
 
@@ -198,7 +198,7 @@ def actual_load_from_repo():
                 db_mission.reminderText = mission["reminderText"]
                 db_mission.completionText = mission["completionText"]
 
-                db_mission.type = mission["type"]
+                db_mission.type = models.MissionTypes[mission["type"]]
                 db_mission.points = mission["points"]
 
                 db_mission.followup_mission.clear()
