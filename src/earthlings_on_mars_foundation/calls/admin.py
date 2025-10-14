@@ -192,9 +192,11 @@ def actual_load_from_repo():
                         "type": models.MissionTypes[mission["type"]],
                         "points": mission["points"],
                         "repeatable": mission["repeatable"],
+                        "issued_by_id": db_npc.pk,
                     },
                 )
 
+                db_mission.issued_by_id = db_npc.pk
                 db_mission.name = mission["name"]
                 db_mission.giveText = mission["giveText"]
                 db_mission.reminderText = mission["reminderText"]
