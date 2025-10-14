@@ -124,7 +124,7 @@ class MissionAdminForm(forms.ModelForm):
         self.fields["lua"].widget = MonacoEditorWidget(name="default", language="lua")
 
 
-class MissionAdmin(admin.ModelAdmin):
+class MissionAdmin(NoQuerySetAdminActionsMixin, admin.ModelAdmin):
     list_display: ClassVar[list[str]] = ["name", "issued_by"]
     search_fields: ClassVar[list[str]] = ["name", "give_text", "completion_text"]
     fieldsets: ClassVar[list[set[str, dict[str, list[str]]]]] = [
