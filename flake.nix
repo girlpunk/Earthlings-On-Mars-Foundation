@@ -2,12 +2,14 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/release-25.05";
     flake-utils.url = "github:numtide/flake-utils";
+    treefmt-nix.url = "github:numtide/treefmt-nix";
   };
 
   outputs = {
     self,
     nixpkgs,
     flake-utils,
+    treefmt-nix,
   }:
     flake-utils.lib.eachDefaultSystem (
       system: let
@@ -36,7 +38,7 @@
           ];
         };
 
-        django-editor-widgets = {fetchurl}:
+        django-editor-widgets = _:
           pkgs.python313Packages.buildPythonPackage rec {
             name = "djangoeditorwidgets";
 
@@ -51,6 +53,26 @@
               repo = "django-editor-widgets";
               rev = "7811e313e2087f50379d16da4aa7d0a08ccb55a4";
               hash = "sha256-0Jpgdty8pBSydIkcSyRS+vUz14Jn+d3pbcr+1S1p8FI=";
+            };
+          };
+
+        django-no-queryset-admin-actions = _:
+          pkgs.python313Packages.buildPythonPackage rec {
+            pname = "django-no-queryset-admin-actions";
+            format = "pyproject";
+            version = "1.2.0";
+
+            nativeBuildInputs = with pkgs.python313Packages; [
+              setuptools
+              setuptools-scm
+            ];
+
+            propagatedBuildInputs = with pkgs.python313Packages; [django];
+
+            src = pkgs.fetchPypi {
+              pname = "django_no_queryset_admin_actions";
+              inherit version;
+              hash = "sha256-Ya0GZsZvzJMXXaODw9gKhhbknYWUh4MCNbMnoL23B7E=";
             };
           };
 
