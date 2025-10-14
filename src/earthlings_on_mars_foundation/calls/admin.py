@@ -187,7 +187,10 @@ def actual_load_from_repo():
 
                 db_mission, _ = models.Mission.objects.get_or_create(
                     pk=mission["id"],
-                    defaults={"pk": mission["id"]},
+                    defaults={
+                        "pk": mission["id"],
+                        "type": mission["type"],
+                    },
                 )
 
                 db_mission.name = mission["name"]
