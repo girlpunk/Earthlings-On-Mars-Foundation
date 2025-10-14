@@ -15,7 +15,7 @@ request_logger = logging.getLogger("django.customRequestLogger")
 
 
 class CallConsumer(AsyncJsonWebsocketConsumer):
-    async def connect(self):
+    async def connect(self) -> None:
         self.incomingMessage = None
         self.newMessage = threading.Event()
         self.outbound = []
@@ -26,16 +26,16 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
 
         await self.accept("ws.jambonz.org")
 
-    async def disconnect(self, close_code):
+    async def disconnect(self, close_code) -> None:
         if self.callLog is not None:
             self.callLog.completed = True
             await self.callLog.asave()
 
-    async def receive(self, text_data):
+    async def receive(self, text_data) -> None:
         data = json.loads(text_data)
         await self.receive_json(data)
 
-    async def receive_json(self, data):
+    async def receive_json(self, data) -> None:
         request_logger.info(f"IN: {data}")
 
         if data["type"] == "session:new":
@@ -58,7 +58,7 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
                 data,
             )
 
-    async def _authenticate(self):
+    async def _authenticate(self) -> models.Recruit:
         recruit = None
 
         while recruit is None:
@@ -95,7 +95,7 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
         await self._say("Caller verified!")
         return recruit
 
-    async def _check_existing_missions(self, recruit):
+    async def _check_existing_missions(self, recruit) -> bool:
         has_uncompleted = False
         recruit_missions = (
             models.RecruitMission.objects.filter(recruit=recruit, finished=None)
@@ -136,7 +136,7 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
 
         return has_uncompleted
 
-    async def _check_lua_mission(self, recruit_mission):
+    async def _check_lua_mission(self, recruit_mission) -> bool:
         lua = AsyncLuaRuntime(unpack_returned_tuples=True)
 
         uncomplete = True
@@ -163,7 +163,7 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
 
         return uncomplete
 
-    async def _check_code_mission(self, recruit_mission):
+    async def _check_code_mission(self, recruit_mission) -> bool:
         code = None
 
         while code is None:
@@ -194,7 +194,7 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
         await self._say(recruit_mission.mission.incorrect_text)
         return True
 
-    async def _check_count_mission(self, recruit_mission):
+    async def _check_count_mission(self, recruit_mission) -> bool:
         code = None
 
         while code is None:
@@ -212,7 +212,7 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
         await self._complete_mission(recruit_mission)
         return False
 
-    async def _cancel_mission(self, recruit_mission):
+    async def _cancel_mission(self, recruit_mission) -> None:
         recruit_mission.finished = datetime.utcnow()
         await recruit_mission.asave()
 
@@ -221,7 +221,7 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
 
         await self._say(recruit_mission.mission.cancel_text)
 
-    async def _complete_mission(self, recruit_mission):
+    async def _complete_mission(self, recruit_mission) -> None:
         recruit_mission.completed = True
         recruit_mission.finished = datetime.utcnow()
         await recruit_mission.asave()
@@ -231,7 +231,13 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
 
         await self._say(recruit_mission.mission.completion_text)
 
-    async def _gather(self, text, digits=None, min_digits=None, max_digits=None):
+    async def _gather(
+        self,
+        text,
+        digits=None,
+        min_digits=None,
+        max_digits=None,
+    ) -> [string, string]:
         command = {
             "input": ["digits"],  # Can also include "speech"
             "actionHook": "wss://fa8340b16a8854.lhr.life/ws/call/",
@@ -280,7 +286,7 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
 
         return (digits, value["data"]["reason"])
 
-    async def _send(self):
+    async def _send(self) -> None:
         if self.ack_done:
             message = {"type": "command", "command": "redirect", "data": self.outbound}
         else:
@@ -296,7 +302,7 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
 
         self.outbound.clear()
 
-    async def _say(self, text: str, npc: models.NPC):
+    async def _say(self, text: str, npc: models.NPC) -> None:
         recording, created = models.Speech.objects.get_or_create(NPC=npc, text=text)
 
         if created or recording.recording is None:
@@ -311,7 +317,7 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
                 },
             )
 
-    async def _session_new(self, data):
+    async def _session_new(self, data) -> None:
         self.active_message = data["msgid"]
         await self._update_log(data)
 
@@ -322,7 +328,7 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
         )
         self.action_thread.start()
 
-    async def _new_call(self):
+    async def _new_call(self) -> None:
         try:
             recruit = await self._authenticate()
 
@@ -381,7 +387,7 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
 
             request_logger.exception(e)
 
-    async def _find_new_mission(self, recruit):
+    async def _find_new_mission(self, recruit) -> None:
         mission = (
             await models.Mission.objects.annotate(
                 total_prerequisites=Count(
@@ -451,11 +457,11 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
         await self._say(mission.give_text)
         return
 
-    async def _session_reconnect(self, data):
+    async def _session_reconnect(self, data) -> None:
         # TODO: Implement
         raise Exception("Reconnects not implemented")
 
-    async def _update_log(self, message):
+    async def _update_log(self, message) -> None:
         if self.callLog is None:
             self.callLog, created = await models.CallLog.objects.aget_or_create(
                 call_id=message["call_sid"],

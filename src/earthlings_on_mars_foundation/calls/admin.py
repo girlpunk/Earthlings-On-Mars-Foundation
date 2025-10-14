@@ -31,6 +31,7 @@ class CustomAdminSite(admin.AdminSite):
         urls = super().get_urls()
         custom_urls = [
             path("dashboard/", self.admin_view(admin_dashboard), name="dashboard"),
+            path("sync/", self.admin_view(load_from_repo), name="load"),
         ]
         return custom_urls + urls
 
@@ -124,6 +125,118 @@ class MissionAdminForm(forms.ModelForm):
         self.fields["lua"].widget = MonacoEditorWidget(name="default", language="lua")
 
 
+@no_queryset_action(description="Load from repo")
+def load_from_repo(request):  # <- No `queryset` parameter
+    source = Path("/repo")
+
+    # Load locations
+    locations = (source / "locations").iterdir()
+    for location_path in locations:
+        with location_path.open(encoding="utf-8") as f:
+            location = yaml.safe_load(f)
+
+            db_location, _ = models.Location.objects.get_or_create(
+                pk=location.id,
+                defaults={"pk": location.id},
+            )
+
+            db_location.name = location["name"]
+            db_location.extension = location["extension"]
+
+            db_location.save()
+
+    # Load NPCs
+    npcs = (source / "NPCs").iterdir()
+    for npc_path in npcs:
+        with (npc_path / "npc.yaml").open(encoding="utf-8") as f:
+            npc = yaml.safe_load(f)
+
+            db_npc, _ = models.NPC.objects.get_or_create(
+                pk=npc.id,
+                defaults={"pk": npc.id},
+            )
+
+            db_npc.name = npc["name"]
+            db_npc.extension = npc["extension"]
+            db_npc.introduction = npc["introduction"]
+
+            db_npc.save()
+
+        # Load Missions
+        for mission_path in (npc_path / "missions").glob("**/*.yaml"):
+            with mission_path.open(encoding="utf-8") as f:
+                mission = yaml.safe_load(f)
+
+                db_mission, _ = models.Mission.objects.get_or_create(
+                    pk=mission.id,
+                    defaults={"pk": mission.id},
+                )
+
+                db_mission.name = mission["name"]
+                db_mission.giveText = mission["giveText"]
+                db_mission.reminderText = mission["reminderText"]
+                db_mission.completionText = mission["completionText"]
+
+                db_mission.type = mission["type"]
+                db_mission.points = mission["points"]
+
+                db_mission.followup_mission.clear()
+                if "followup_mission" in mission:
+                    for m in mission["followup_mission"]:
+                        db_mission.followup_mission.add(m)
+
+                if "priority" in mission:
+                    db_mission.priority = mission["priority"]
+                if "onlyStartFrom" in mission:
+                    db_mission.onlyStartFrom = mission["onlyStartFrom"]
+
+                db_mission.prerequisites.clear()
+                if "prerequisites" in mission:
+                    for m in mission["prerequisites"]:
+                        db_mission.prerequisites.add(m)
+
+                db_mission.dependents.clear()
+                if "dependents" in mission:
+                    for m in mission["dependents"]:
+                        db_mission.dependents.add(m)
+
+                if "repeatable" in mission:
+                    db_mission.repeatable = mission["repeatable"]
+
+                if "notBefore" in mission:
+                    db_mission.notBefore = datetime.fromisoformat(
+                        mission["notBefore"],
+                    )
+                if "notAfter" in mission:
+                    db_mission.notAfter = datetime.fromisoformat(
+                        mission["notAfter"],
+                    )
+                if "cancelAfterTime" in mission:
+                    db_mission.cancelAfterTime = datetime.fromisoformat(
+                        mission["cancelAfterTime"],
+                    )
+                if "cancelAfterTries" in mission:
+                    db_mission.cancelAfterTries = mission["cancelAfterTries"]
+                if "cancelText" in mission:
+                    db_mission.cancelText = mission["cancelText"]
+
+                if "callBackFrom" in mission:
+                    db_mission.callBackFrom = mission["callBackFrom"]
+
+                if "callAnother" in mission:
+                    db_mission.callAnother = mission["callAnother"]
+
+                if "code" in mission:
+                    db_mission.code = mission["code"]
+                if "incorrectText" in mission:
+                    db_mission.incorrectText = mission["incorrectText"]
+
+                if "lua" in mission:
+                    db_mission.lua = mission["lua"]
+
+                db_mission.save()
+
+
 class MissionAdmin(NoQuerySetAdminActionsMixin, admin.ModelAdmin):
     list_display: ClassVar[list[str]] = ["name", "issued_by"]
     search_fields: ClassVar[list[str]] = ["name", "give_text", "completion_text"]
@@ -173,117 +286,6 @@ class MissionAdmin(NoQuerySetAdminActionsMixin, admin.ModelAdmin):
     ]
     inlines: ClassVar[list[str]] = [PrerequisiteInline]
     form = MissionAdminForm
-
-    @no_queryset_action(description="Load from repo")
-    def load_from_repo(self, request):  # <- No `queryset` parameter
-        source = Path("/repo")
-
-        # Load locations
-        locations = (source / "locations").iterdir()
-        for location_path in locations:
-            with location_path.open(encoding="utf-8") as f:
-                location = yaml.safe_load(f)
-
-                db_location, _ = models.Location.objects.get_or_create(
-                    pk=location.id,
-                    defaults={"pk": location.id},
-                )
-
-                db_location.name = location["name"]
-                db_location.extension = location["extension"]
-
-                db_location.save()
-
-        # Load NPCs
-        npcs = (source / "NPCs").iterdir()
-        for npc_path in npcs:
-            with (npc_path / "npc.yaml").open(encoding="utf-8") as f:
-                npc = yaml.safe_load(f)
-
-                db_npc, _ = models.NPC.objects.get_or_create(
-                    pk=npc.id,
-                    defaults={"pk": npc.id},
-                )
-
-                db_npc.name = npc["name"]
-                db_npc.extension = npc["extension"]
-                db_npc.introduction = npc["introduction"]
-
-                db_npc.save()
-
-            # Load Missions
-            for mission_path in (npc_path / "missions").glob("**/*.yaml"):
-                with mission_path.open(encoding="utf-8") as f:
-                    mission = yaml.safe_load(f)
-
-                    db_mission, _ = models.Mission.objects.get_or_create(
-                        pk=mission.id,
-                        defaults={"pk": mission.id},
-                    )
-
-                    db_mission.name = mission["name"]
-                    db_mission.giveText = mission["giveText"]
-                    db_mission.reminderText = mission["reminderText"]
-                    db_mission.completionText = mission["completionText"]
-
-                    db_mission.type = mission["type"]
-                    db_mission.points = mission["points"]
-
-                    db_mission.followup_mission.clear()
-                    if "followup_mission" in mission:
-                        for m in mission["followup_mission"]:
-                            db_mission.followup_mission.add(m)
-
-                    if "priority" in mission:
-                        db_mission.priority = mission["priority"]
-                    if "onlyStartFrom" in mission:
-                        db_mission.onlyStartFrom = mission["onlyStartFrom"]
-
-                    db_mission.prerequisites.clear()
-                    if "prerequisites" in mission:
-                        for m in mission["prerequisites"]:
-                            db_mission.prerequisites.add(m)
-
-                    db_mission.dependents.clear()
-                    if "dependents" in mission:
-                        for m in mission["dependents"]:
-                            db_mission.dependents.add(m)
-
-                    if "repeatable" in mission:
-                        db_mission.repeatable = mission["repeatable"]
-
-                    if "notBefore" in mission:
-                        db_mission.notBefore = datetime.fromisoformat(
-                            mission["notBefore"],
-                        )
-                    if "notAfter" in mission:
-                        db_mission.notAfter = datetime.fromisoformat(
-                            mission["notAfter"],
-                        )
-                    if "cancelAfterTime" in mission:
-                        db_mission.cancelAfterTime = datetime.fromisoformat(
-                            mission["cancelAfterTime"],
-                        )
-                    if "cancelAfterTries" in mission:
-                        db_mission.cancelAfterTries = mission["cancelAfterTries"]
-                    if "cancelText" in mission:
-                        db_mission.cancelText = mission["cancelText"]
-
-                    if "callBackFrom" in mission:
-                        db_mission.callBackFrom = mission["callBackFrom"]
-
-                    if "callAnother" in mission:
-                        db_mission.callAnother = mission["callAnother"]
-
-                    if "code" in mission:
-                        db_mission.code = mission["code"]
-                    if "incorrectText" in mission:
-                        db_mission.incorrectText = mission["incorrectText"]
-
-                    if "lua" in mission:
-                        db_mission.lua = mission["lua"]
-
-                    db_mission.save()
 
     actions = [load_from_repo]
 
