@@ -35,7 +35,7 @@ class CustomAdminSite(admin.AdminSite):
         urls = super().get_urls()
         custom_urls = [
             path("dashboard/", self.admin_view(admin_dashboard), name="dashboard"),
-            path("sync/", self.admin_view(load_from_repo), name="load"),
+            path("sync/", self.admin_view(load_from_repo_page), name="load"),
         ]
         return custom_urls + urls
 
@@ -130,7 +130,13 @@ class MissionAdminForm(forms.ModelForm):
 
 
 @no_queryset_action(description="Load from repo")
-def load_from_repo(request):  # <- No `queryset` parameter
+def load_from_repo_action(request, *args):  # <- No `queryset` parameter
+    actual_load_from_repo()
+
+def load_from_repo_page(request):
+    actual_load_from_repo()
+
+def actual_load_from_repo():
     source = Path("/repo")
 
     # Load locations
@@ -291,7 +297,7 @@ class MissionAdmin(NoQuerySetAdminActionsMixin, admin.ModelAdmin):
     inlines: ClassVar[list[str]] = [PrerequisiteInline]
     form = MissionAdminForm
 
-    actions = [load_from_repo]
+    actions = [load_from_repo_action]
 
 
 custom_admin_site.register(models.Mission, MissionAdmin)
