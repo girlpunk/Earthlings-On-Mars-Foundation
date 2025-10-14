@@ -198,9 +198,9 @@ def actual_load_from_repo():
 
                 db_mission.issued_by_id = db_npc.pk
                 db_mission.name = mission["name"]
-                db_mission.giveText = mission["giveText"]
-                db_mission.reminderText = mission["reminderText"]
-                db_mission.completionText = mission["completionText"]
+                db_mission.give_text = mission["giveText"]
+                db_mission.reminder_text = mission["reminderText"]
+                db_mission.completion_text = mission["completionText"]
 
                 db_mission.type = models.MissionTypes[mission["type"]]
                 db_mission.points = mission["points"]
@@ -214,7 +214,7 @@ def actual_load_from_repo():
                 if "priority" in mission:
                     db_mission.priority = mission["priority"]
                 if "onlyStartFrom" in mission:
-                    db_mission.onlyStartFrom = mission["onlyStartFrom"]
+                    db_mission.only_start_from = mission["onlyStartFrom"]
 
                 db_mission.prerequisites.clear()
                 if "prerequisites" in mission:
@@ -229,32 +229,32 @@ def actual_load_from_repo():
                 db_mission.repeatable = mission["repeatable"]
 
                 if "notBefore" in mission:
-                    db_mission.notBefore = datetime.fromisoformat(
+                    db_mission.not_before = datetime.fromisoformat(
                         mission["notBefore"],
                     )
                 if "notAfter" in mission:
-                    db_mission.notAfter = datetime.fromisoformat(
+                    db_mission.not_after = datetime.fromisoformat(
                         mission["notAfter"],
                     )
                 if "cancelAfterTime" in mission:
-                    db_mission.cancelAfterTime = datetime.fromisoformat(
+                    db_mission.cancel_after_time = datetime.fromisoformat(
                         mission["cancelAfterTime"],
                     )
                 if "cancelAfterTries" in mission:
-                    db_mission.cancelAfterTries = mission["cancelAfterTries"]
+                    db_mission.cancel_after_tries = mission["cancelAfterTries"]
                 if "cancelText" in mission:
-                    db_mission.cancelText = mission["cancelText"]
+                    db_mission.cancel_text = mission["cancelText"]
 
                 if "callBackFrom" in mission:
-                    db_mission.callBackFrom = mission["callBackFrom"]
+                    db_mission.call_back_from = mission["callBackFrom"]
 
                 if "callAnother" in mission:
-                    db_mission.callAnother = mission["callAnother"]
+                    db_mission.call_another = mission["callAnother"]
 
                 if "code" in mission:
                     db_mission.code = mission["code"]
                 if "incorrectText" in mission:
-                    db_mission.incorrectText = mission["incorrectText"]
+                    db_mission.incorrect_text = mission["incorrectText"]
 
                 if "lua" in mission:
                     db_mission.lua = mission["lua"]
