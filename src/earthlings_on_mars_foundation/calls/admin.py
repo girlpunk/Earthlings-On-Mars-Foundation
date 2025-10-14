@@ -190,6 +190,7 @@ def actual_load_from_repo():
                     defaults={
                         "pk": mission["id"],
                         "type": models.MissionTypes[mission["type"]],
+                        "points": mission["points"],
                     },
                 )
 
