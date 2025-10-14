@@ -191,6 +191,7 @@ def actual_load_from_repo():
                         "pk": mission["id"],
                         "type": models.MissionTypes[mission["type"]],
                         "points": mission["points"],
+                        "repeatable": mission["repeatable"],
                     },
                 )
 
@@ -222,8 +223,7 @@ def actual_load_from_repo():
                     for m in mission["dependents"]:
                         db_mission.dependents.add(m)
 
-                if "repeatable" in mission:
-                    db_mission.repeatable = mission["repeatable"]
+                db_mission.repeatable = mission["repeatable"]
 
                 if "notBefore" in mission:
                     db_mission.notBefore = datetime.fromisoformat(
