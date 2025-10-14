@@ -7,9 +7,9 @@ from typing import ClassVar
 import yaml
 from calls import models
 from django import forms
-from django.http import HttpResponse
 from django.contrib import admin
 from django.db.models import Sum
+from django.http import HttpResponse
 from django.template.response import TemplateResponse
 from django.urls import path
 from django_no_queryset_admin_actions import (
@@ -133,8 +133,10 @@ class MissionAdminForm(forms.ModelForm):
 def load_from_repo_action(request, *args):  # <- No `queryset` parameter
     actual_load_from_repo()
 
+
 def load_from_repo_page(request):
     actual_load_from_repo()
+
 
 def actual_load_from_repo():
     source = Path("/repo")
@@ -146,8 +148,8 @@ def actual_load_from_repo():
             location = yaml.safe_load(f)
 
             db_location, _ = models.Location.objects.get_or_create(
-                pk=location.id,
-                defaults={"pk": location.id},
+                pk=location["id"],
+                defaults={"pk": location["id"]},
             )
 
             db_location.name = location["name"]
@@ -162,8 +164,8 @@ def actual_load_from_repo():
             npc = yaml.safe_load(f)
 
             db_npc, _ = models.NPC.objects.get_or_create(
-                pk=npc.id,
-                defaults={"pk": npc.id},
+                pk=npc["id"],
+                defaults={"pk": npc["id"]},
             )
 
             db_npc.name = npc["name"]
@@ -178,8 +180,8 @@ def actual_load_from_repo():
                 mission = yaml.safe_load(f)
 
                 db_mission, _ = models.Mission.objects.get_or_create(
-                    pk=mission.id,
-                    defaults={"pk": mission.id},
+                    pk=mission["id"],
+                    defaults={"pk": mission["id"]},
                 )
 
                 db_mission.name = mission["name"]
@@ -246,6 +248,7 @@ def actual_load_from_repo():
 
                 db_mission.save()
     return HttpResponse("OK")
+
 
 class MissionAdmin(NoQuerySetAdminActionsMixin, admin.ModelAdmin):
     list_display: ClassVar[list[str]] = ["name", "issued_by"]
