@@ -205,6 +205,8 @@ def actual_load_from_repo():
                 db_mission.type = models.MissionTypes[mission["type"]]
                 db_mission.points = mission["points"]
 
+                db_mission.save()
+
                 db_mission.followup_mission.clear()
                 if "followup_mission" in mission:
                     for m in mission["followup_mission"]:
