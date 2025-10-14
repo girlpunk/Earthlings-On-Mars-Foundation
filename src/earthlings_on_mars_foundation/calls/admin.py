@@ -149,7 +149,10 @@ def actual_load_from_repo():
 
             db_location, _ = models.Location.objects.get_or_create(
                 pk=location["id"],
-                defaults={"pk": location["id"]},
+                defaults={
+                    "pk": location["id"],
+                    "extension": location["extension"],
+                },
             )
 
             db_location.name = location["name"]
