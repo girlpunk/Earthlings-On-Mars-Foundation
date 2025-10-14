@@ -1,0 +1,33 @@
+id: 100
+name: "Test Mission"
+giveText: "This is a sample mission, call me back and say 123 please."
+reminderText: "Have you remembered what number to tell me?"
+completionText: "Yay, well done!"
+type: "CODE"
+points: 10
+followup_mission: []
+priority: 5
+#onlyStartFrom:
+#prerequisites:
+#dependents:
+repeatable: True
+# time-limitations
+# TODO: Make this less annoying to use?
+#notBefore:
+#notAfter:
+#cancelAfterTime:
+#cancelAfterTries:
+#cancelText:
+
+# Call from a specific location
+#callBackFrom:
+
+# Call another NPC
+#callAnother:
+
+# Call back with a code from a physical item
+code: 123
+incorrectText: "What? No you were meant to say 123. Give it another try."
+
+# Lua
+#lua: ""
