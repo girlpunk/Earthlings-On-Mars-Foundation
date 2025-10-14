@@ -86,6 +86,7 @@ INSTALLED_APPS = [
     #    'health_check.contrib.rabbitmq',            # requires RabbitMQ broker
     #    'health_check.contrib.redis',               # requires Redis broker
     #'health_check.contrib.db_heartbeat',
+    "django_no_queryset_admin_actions",
 ]
 
 if DEBUG:
