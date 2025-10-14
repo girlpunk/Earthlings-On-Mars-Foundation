@@ -4,20 +4,30 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('calls', '0008_alter_mission_call_back_from_and_more'),
+        ("calls", "0008_alter_mission_call_back_from_and_more"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='mission',
-            name='lua',
-            field=models.TextField(blank=True, help_text='Lua script for custom requirements'),
+            model_name="mission",
+            name="lua",
+            field=models.TextField(
+                blank=True,
+                help_text="Lua script for custom requirements",
+            ),
         ),
         migrations.AlterField(
-            model_name='mission',
-            name='type',
-            field=models.IntegerField(choices=[(1, 'LOCATION'), (2, 'NPC'), (3, 'CODE'), (5, 'COUNT'), (6, 'LUA')]),
+            model_name="mission",
+            name="type",
+            field=models.IntegerField(
+                choices=[
+                    (1, "LOCATION"),
+                    (2, "NPC"),
+                    (3, "CODE"),
+                    (5, "COUNT"),
+                    (6, "LUA"),
+                ],
+            ),
         ),
     ]

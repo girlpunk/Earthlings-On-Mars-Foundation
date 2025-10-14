@@ -5,39 +5,69 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('calls', '0012_alter_recruitmission_state'),
+        ("calls", "0012_alter_recruitmission_state"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='calllog',
-            name='NPC',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='calls.npc'),
+            model_name="calllog",
+            name="NPC",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="calls.npc",
+            ),
         ),
         migrations.AlterField(
-            model_name='calllog',
-            name='location',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='calls.location'),
+            model_name="calllog",
+            name="location",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="calls.location",
+            ),
         ),
         migrations.AlterField(
-            model_name='calllog',
-            name='recruit',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='calls.recruit'),
+            model_name="calllog",
+            name="recruit",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="calls.recruit",
+            ),
         ),
         migrations.AlterField(
-            model_name='recruitmission',
-            name='state',
+            model_name="recruitmission",
+            name="state",
             field=models.JSONField(blank=True, default=dict),
         ),
         migrations.CreateModel(
-            name='Speech',
+            name="Speech",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('text', models.TextField()),
-                ('recording', models.FileField(upload_to='')),
-                ('NPC', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='calls.npc')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("text", models.TextField()),
+                ("recording", models.FileField(upload_to="")),
+                (
+                    "NPC",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="calls.npc",
+                    ),
+                ),
             ],
         ),
     ]

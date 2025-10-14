@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('calls', '0010_calllog_completed_calllog_success_and_more'),
+        ("calls", "0010_calllog_completed_calllog_success_and_more"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='recruitmission',
-            name='state',
+            model_name="recruitmission",
+            name="state",
             field=models.JSONField(default=dict),
         ),
     ]

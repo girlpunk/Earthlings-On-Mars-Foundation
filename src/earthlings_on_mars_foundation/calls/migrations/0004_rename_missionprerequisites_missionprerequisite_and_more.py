@@ -4,23 +4,22 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('calls', '0003_rename_npc_calllog_npc_mission_dependents_and_more'),
+        ("calls", "0003_rename_npc_calllog_npc_mission_dependents_and_more"),
     ]
 
     operations = [
         migrations.RenameModel(
-            old_name='MissionPrerequisites',
-            new_name='MissionPrerequisite',
+            old_name="MissionPrerequisites",
+            new_name="MissionPrerequisite",
         ),
         migrations.AlterModelOptions(
-            name='npc',
-            options={'verbose_name': 'NPC'},
+            name="npc",
+            options={"verbose_name": "NPC"},
         ),
         migrations.RenameIndex(
-            model_name='missionprerequisite',
-            new_name='calls_missi_mission_2e031a_idx',
-            old_name='calls_missi_mission_a85c26_idx',
+            model_name="missionprerequisite",
+            new_name="calls_missi_mission_2e031a_idx",
+            old_name="calls_missi_mission_a85c26_idx",
         ),
     ]

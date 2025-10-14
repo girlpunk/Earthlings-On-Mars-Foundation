@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('calls', '0011_recruitmission_state'),
+        ("calls", "0011_recruitmission_state"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='recruitmission',
-            name='state',
+            model_name="recruitmission",
+            name="state",
             field=models.JSONField(null=True),
         ),
     ]

@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('calls', '0006_calllog_location_mission_incorrect_text'),
+        ("calls", "0006_calllog_location_mission_incorrect_text"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='recruitnpc',
-            name='contacted',
+            model_name="recruitnpc",
+            name="contacted",
             field=models.BooleanField(default=False),
         ),
     ]

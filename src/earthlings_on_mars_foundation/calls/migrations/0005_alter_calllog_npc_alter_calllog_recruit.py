@@ -5,20 +5,27 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('calls', '0004_rename_missionprerequisites_missionprerequisite_and_more'),
+        ("calls", "0004_rename_missionprerequisites_missionprerequisite_and_more"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='calllog',
-            name='NPC',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='calls.npc'),
+            model_name="calllog",
+            name="NPC",
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="calls.npc",
+            ),
         ),
         migrations.AlterField(
-            model_name='calllog',
-            name='recruit',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='calls.recruit'),
+            model_name="calllog",
+            name="recruit",
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="calls.recruit",
+            ),
         ),
     ]

@@ -5,25 +5,29 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('calls', '0007_alter_recruitnpc_contacted'),
+        ("calls", "0007_alter_recruitnpc_contacted"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='mission',
-            name='call_back_from',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, to='calls.location'),
+            model_name="mission",
+            name="call_back_from",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.PROTECT,
+                to="calls.location",
+            ),
         ),
         migrations.AlterField(
-            model_name='recruitmission',
-            name='finished',
+            model_name="recruitmission",
+            name="finished",
             field=models.DateTimeField(blank=True, null=True),
         ),
         migrations.AlterField(
-            model_name='recruitmission',
-            name='started',
+            model_name="recruitmission",
+            name="started",
             field=models.DateTimeField(auto_now_add=True),
         ),
     ]

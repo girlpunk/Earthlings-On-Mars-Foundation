@@ -11,10 +11,10 @@ request_logger = logging.getLogger("django.customRequestLogger")
 
 
 class SessionLogMiddleware(MiddlewareMixin):
-    #def __init__(self, get_response):
+    # def __init__(self, get_response):
     #    self.get_response = get_response
 
-    #def __call__(self, request):
+    # def __call__(self, request):
     #    start_time = time.monotonic()
     #    log_data = {
     #        "remote_address": request.META["REMOTE_ADDR"],
@@ -39,7 +39,6 @@ class SessionLogMiddleware(MiddlewareMixin):
 
     #    return response
 
-
     def save(self, request, response=None, exception=None, status_code=None):
         headers = request.headers
         response_data = None
@@ -53,7 +52,10 @@ class SessionLogMiddleware(MiddlewareMixin):
             with contextlib.suppress(Exception):
                 request_data = self.clean_text(request.body)
 
-        if "CONTENT_TYPE" not in headers or headers["CONTENT_TYPE"] != "application/x-www-form-urlencoded":
+        if (
+            "CONTENT_TYPE" not in headers
+            or headers["CONTENT_TYPE"] != "application/x-www-form-urlencoded"
+        ):
             try:
                 response_data = json.loads(self.clean_text(response.content))
             except RawPostDataException:
@@ -64,15 +66,15 @@ class SessionLogMiddleware(MiddlewareMixin):
 
         log_data = {
             #'HEADERS': headers,
-            'METHOD': request.method,
+            "METHOD": request.method,
             #'USER': {
             #    'ip_address': self.get_client_ip(request)
-            #},
-            'URL': request.build_absolute_uri(),
-            'REQUEST_DATA': request_data,
-            'RESPONSE_DATA': response_data,
-            'ERROR_MESSAGE': exception,
-            'STATUS_CODE': status_code
+            # },
+            "URL": request.build_absolute_uri(),
+            "REQUEST_DATA": request_data,
+            "RESPONSE_DATA": response_data,
+            "ERROR_MESSAGE": exception,
+            "STATUS_CODE": status_code,
         }
 
         request_logger.error(log_data) if exception else request_logger.info(log_data)
@@ -81,19 +83,18 @@ class SessionLogMiddleware(MiddlewareMixin):
         status_code = 404 if isinstance(exception, Http404) else 500
 
         try:
-            self.save(request,
-                      exception=exception,
-                      status_code=status_code)
+            self.save(request, exception=exception, status_code=status_code)
         except Exception:
             error = traceback.format_exc()
             request_logger.exception(error)
 
-
     def process_response(self, request, response):
         try:
-            response_data = {'request': request,
-                             'response': response,
-                             'status_code': response.status_code}
+            response_data = {
+                "request": request,
+                "response": response,
+                "status_code": response.status_code,
+            }
 
             if "/admin" not in request.path and "/static" not in request.path:
                 self.save(**response_data)
@@ -105,17 +106,22 @@ class SessionLogMiddleware(MiddlewareMixin):
     def clean_text(self, text):
         if isinstance(text, bytes):
             try:
-                return text.decode('utf-8')\
-                           .replace('\\n', '')\
-                           .replace('\\t', '')\
-                           .replace('\\r', '')
+                return (
+                    text.decode("utf-8")
+                    .replace("\\n", "")
+                    .replace("\\t", "")
+                    .replace("\\r", "")
+                )
             except Exception:
                 request_logger.exception()
         return str(text)
 
-
     # get clients ip address
     def get_client_ip(self, request):
-        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
 
-        return x_forwarded_for.split(",")[0] if x_forwarded_for else request.META.get("REMOTE_ADDR")
+        return (
+            x_forwarded_for.split(",")[0]
+            if x_forwarded_for
+            else request.META.get("REMOTE_ADDR")
+        )

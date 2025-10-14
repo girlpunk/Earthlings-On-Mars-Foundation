@@ -107,10 +107,87 @@
             lupa
             pillow
             (pkgs.callPackage django-editor-widgets {})
+            (pkgs.callPackage django-no-queryset-admin-actions {})
             psycopg2
+            pyyaml
             requests
           ];
         };
+
+        treefmt = treefmt-nix.lib.evalModule pkgs (
+          {pkgs, ...}: {
+            # Used to find the project root
+            projectRootFile = "flake.nix";
+
+            # Enable the Nix formatter
+            programs.alejandra.enable = true;
+            programs.statix.enable = true;
+
+            # Enable the YAML formatter
+            programs.yamlfmt.enable = true;
+
+            # Enable the Python formatters
+            programs.ruff-check.enable = true;
+            programs.ruff-format.enable = true;
+            programs.ruff-check.extendSelect = [
+              "A"
+              "ANN"
+              "ARG"
+              "ASYNC"
+              "B"
+              "BLE"
+              "C"
+              "C4"
+              "C90"
+              "COM"
+              "D"
+              "DOC"
+              "DTZ"
+              "E"
+              "EM"
+              "EXE"
+              "F"
+              "F"
+              "FA"
+              "FBT"
+              "FIX"
+              "FLY"
+              "FURB"
+              "G"
+              "I"
+              "ICN"
+              "INP"
+              "INT"
+              "ISC"
+              "LOG"
+              "N"
+              "PERF"
+              "PGH"
+              "PIE"
+              "PL"
+              "PTH"
+              "PYI"
+              "Q"
+              "Q"
+              "RET"
+              "RSE"
+              "RUF"
+              "S"
+              "SIM"
+              "SLF"
+              "T10"
+              "T20"
+              "TC"
+              "TD"
+              "TID"
+              "TRY"
+              "UP"
+              "W"
+              "W"
+              "YTT"
+            ];
+          }
+        );
       in
         with pkgs; rec {
           devShell = mkShell {
@@ -121,12 +198,12 @@
 
           packages.earthlings_on_mars_foundation = app;
           defaultPackage = packages.earthlings_on_mars_foundation;
-          container = (pkgs.dockerTools.buildImage {
+          container = pkgs.dockerTools.buildImage {
             name = "ghcr.io/girlpunk/earthlings-on-mars-foundation";
             tag = "latest";
 
             config = {
-              Cmd = [ "${app}/bin/app" ];
+              Cmd = ["${app}/bin/app"];
               Expose = [8000];
             };
 
@@ -139,9 +216,12 @@
               bash
               coreutils
             ];
-          });
+          };
 
-          formatter = pkgs.alejandra;
+          formatter = treefmt.config.build.wrapper;
+          checks = {
+            formatting = treefmt.config.build.check self;
+          };
         }
     );
 }

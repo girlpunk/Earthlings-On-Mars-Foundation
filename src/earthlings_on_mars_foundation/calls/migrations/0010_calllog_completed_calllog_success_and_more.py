@@ -4,30 +4,29 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('calls', '0009_mission_lua_alter_mission_type'),
+        ("calls", "0009_mission_lua_alter_mission_type"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='calllog',
-            name='completed',
+            model_name="calllog",
+            name="completed",
             field=models.BooleanField(default=False),
         ),
         migrations.AddField(
-            model_name='calllog',
-            name='success',
+            model_name="calllog",
+            name="success",
             field=models.BooleanField(default=False),
         ),
         migrations.AlterField(
-            model_name='calllog',
-            name='digits',
+            model_name="calllog",
+            name="digits",
             field=models.PositiveIntegerField(default=0),
         ),
         migrations.AlterField(
-            model_name='calllog',
-            name='duration',
+            model_name="calllog",
+            name="duration",
             field=models.PositiveIntegerField(default=0),
         ),
     ]

@@ -5,55 +5,93 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('calls', '0001_initial'),
+        ("calls", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='mission',
-            name='call_another',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='call_another', to='calls.npc'),
+            model_name="mission",
+            name="call_another",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.PROTECT,
+                related_name="call_another",
+                to="calls.npc",
+            ),
         ),
         migrations.AlterField(
-            model_name='mission',
-            name='cancel_after_time',
-            field=models.DateTimeField(blank=True, help_text='Cancel the mission if it is outstanding after the specified date/time', null=True),
+            model_name="mission",
+            name="cancel_after_time",
+            field=models.DateTimeField(
+                blank=True,
+                help_text="Cancel the mission if it is outstanding after the specified date/time",
+                null=True,
+            ),
         ),
         migrations.AlterField(
-            model_name='mission',
-            name='cancel_after_tries',
-            field=models.PositiveSmallIntegerField(blank=True, help_text='Cancel the mission if the player calls its NPC without completing it this many times', null=True),
+            model_name="mission",
+            name="cancel_after_tries",
+            field=models.PositiveSmallIntegerField(
+                blank=True,
+                help_text="Cancel the mission if the player calls its NPC without completing it this many times",
+                null=True,
+            ),
         ),
         migrations.AlterField(
-            model_name='mission',
-            name='cancel_text',
-            field=models.TextField(blank=True, help_text='This text is given to the player when the mission is cancelled', max_length=2000),
+            model_name="mission",
+            name="cancel_text",
+            field=models.TextField(
+                blank=True,
+                help_text="This text is given to the player when the mission is cancelled",
+                max_length=2000,
+            ),
         ),
         migrations.AlterField(
-            model_name='mission',
-            name='code',
+            model_name="mission",
+            name="code",
             field=models.PositiveIntegerField(blank=True, null=True),
         ),
         migrations.AlterField(
-            model_name='mission',
-            name='followup_mission',
-            field=models.ForeignKey(blank=True, help_text='Which mission will automatically be started upon completion of this mission', null=True, on_delete=django.db.models.deletion.PROTECT, to='calls.mission'),
+            model_name="mission",
+            name="followup_mission",
+            field=models.ForeignKey(
+                blank=True,
+                help_text="Which mission will automatically be started upon completion of this mission",
+                null=True,
+                on_delete=django.db.models.deletion.PROTECT,
+                to="calls.mission",
+            ),
         ),
         migrations.AlterField(
-            model_name='mission',
-            name='not_after',
-            field=models.DateTimeField(blank=True, help_text='Only start this mission if the current date/time is before the specified date/time', null=True),
+            model_name="mission",
+            name="not_after",
+            field=models.DateTimeField(
+                blank=True,
+                help_text="Only start this mission if the current date/time is before the specified date/time",
+                null=True,
+            ),
         ),
         migrations.AlterField(
-            model_name='mission',
-            name='not_before',
-            field=models.DateTimeField(blank=True, help_text='Only start this mission if the current date/time is after the specified date/time', null=True),
+            model_name="mission",
+            name="not_before",
+            field=models.DateTimeField(
+                blank=True,
+                help_text="Only start this mission if the current date/time is after the specified date/time",
+                null=True,
+            ),
         ),
         migrations.AlterField(
-            model_name='mission',
-            name='only_start_from',
-            field=models.ForeignKey(blank=True, help_text='If set, this mission can only be started from the specified location', null=True, on_delete=django.db.models.deletion.PROTECT, related_name='only_start_from', to='calls.location'),
+            model_name="mission",
+            name="only_start_from",
+            field=models.ForeignKey(
+                blank=True,
+                help_text="If set, this mission can only be started from the specified location",
+                null=True,
+                on_delete=django.db.models.deletion.PROTECT,
+                related_name="only_start_from",
+                to="calls.location",
+            ),
         ),
     ]

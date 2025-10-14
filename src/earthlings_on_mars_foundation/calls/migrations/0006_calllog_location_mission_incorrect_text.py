@@ -5,20 +5,26 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('calls', '0005_alter_calllog_npc_alter_calllog_recruit'),
+        ("calls", "0005_alter_calllog_npc_alter_calllog_recruit"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='calllog',
-            name='location',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='calls.location'),
+            model_name="calllog",
+            name="location",
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="calls.location",
+            ),
         ),
         migrations.AddField(
-            model_name='mission',
-            name='incorrect_text',
-            field=models.TextField(blank=True, help_text='Given to the user when the get the code wrong'),
+            model_name="mission",
+            name="incorrect_text",
+            field=models.TextField(
+                blank=True,
+                help_text="Given to the user when the get the code wrong",
+            ),
         ),
     ]

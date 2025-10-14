@@ -1,14 +1,13 @@
-
 def gather(text, callback: str, digits=None, min_digits=None, max_digits=None):
     data = {
         "verb": "gather",
         "actionHook": callback,
-        "input": ["digits"], #Can also include "speech"
+        "input": ["digits"],  # Can also include "speech"
         "bargein": False,
         "dtmfBargein": True,
         "finishOnKey": "#",
         "say": say(text),
-        "interDigitTimeout": 5
+        "interDigitTimeout": 5,
     }
 
     del data["say"]["verb"]
@@ -22,17 +21,15 @@ def gather(text, callback: str, digits=None, min_digits=None, max_digits=None):
 
     return data
 
-    #self.timeout = 8
+    # self.timeout = 8
 
-    #self.  "recognizer": {
-    #self.    "vendor": "Google",
-    #self.    "language": "en-US",
-    #self.    "hints": ["sales", "support"],
-    #self.    "hintsBoost": 10
-    #self.  },
+    # self.  "recognizer": {
+    # self.    "vendor": "Google",
+    # self.    "language": "en-US",
+    # self.    "hints": ["sales", "support"],
+    # self.    "hintsBoost": 10
+    # self.  },
+
 
 def say(text):
-    return {
-        "verb": "say",
-        "text": text
-    }
+    return {"verb": "say", "text": text}
