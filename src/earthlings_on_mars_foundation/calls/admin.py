@@ -168,7 +168,10 @@ def actual_load_from_repo():
 
             db_npc, _ = models.NPC.objects.get_or_create(
                 pk=npc["id"],
-                defaults={"pk": npc["id"]},
+                defaults={
+                    "pk": npc["id"],
+                    "extension": npc["extension"],
+                },
             )
 
             db_npc.name = npc["name"]
