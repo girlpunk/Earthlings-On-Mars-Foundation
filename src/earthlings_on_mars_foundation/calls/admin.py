@@ -11,7 +11,10 @@ from django.contrib import admin
 from django.db.models import Sum
 from django.template.response import TemplateResponse
 from django.urls import path
-from django_no_queryset_admin_actions import no_queryset_action
+from django_no_queryset_admin_actions import (
+    NoQuerySetAdminActionsMixin,
+    no_queryset_action,
+)
 from djangoeditorwidgets.widgets import MonacoEditorWidget
 
 
