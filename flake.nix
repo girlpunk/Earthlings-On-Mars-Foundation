@@ -223,7 +223,7 @@
 
           formatter = treefmt.config.build.wrapper;
           checks = {
-#            formatting = treefmt.config.build.check self;
+            formatting = treefmt.config.build.check self;
             django-check = pkgs.writeShellScript "django-check.sh" ''
               ${pkgs.python313}/bin/python src/earthlings_on_mars_foundation/manage.py check
             '';

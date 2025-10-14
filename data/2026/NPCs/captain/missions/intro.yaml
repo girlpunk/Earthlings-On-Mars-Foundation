@@ -5,7 +5,7 @@ reminderText: "Have you remembered what number to tell me?"
 completionText: "Yay, well done!"
 type: "CODE"
 points: 10
-followup_mission: []
+#followup_mission:
 priority: 5
 #onlyStartFrom:
 #prerequisites:
