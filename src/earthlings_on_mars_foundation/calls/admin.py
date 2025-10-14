@@ -207,10 +207,9 @@ def actual_load_from_repo():
 
                 db_mission.save()
 
-                db_mission.followup_mission.clear()
+                db_mission.followup_mission_id = None
                 if "followup_mission" in mission:
-                    for m in mission["followup_mission"]:
-                        db_mission.followup_mission.add(m)
+                    db_mission.followup_mission_id = mission["followup_mission"]
 
                 if "priority" in mission:
                     db_mission.priority = mission["priority"]
