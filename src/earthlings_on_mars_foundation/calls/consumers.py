@@ -308,7 +308,14 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
 
         self.outbound.clear()
 
-    async def _say(self, text: str, npc: models.NPC) -> None:
+    async def _say(self, text: str, npc = None: Optional[models.NPC]) -> None:
+        if npc is None and self.callLog.NPC is None:
+            request_logger.warning($"Say with unknown NPC")
+            self.outbound.append({"say": {"text": text}})
+            return
+        else if npc is None:
+            npc = self.callLog.NPC
+
         recording, created = models.Speech.objects.get_or_create(NPC=npc, text=text)
 
         if created or recording.recording is None:
