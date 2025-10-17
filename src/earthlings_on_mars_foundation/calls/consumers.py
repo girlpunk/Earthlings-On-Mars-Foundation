@@ -146,6 +146,9 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
             uncomplete = False
             await self._complete_mission(recruit_mission)
 
+        async def say(text: str):
+            await self._say(text, recruit_mission.NPC)
+
         lua.globals().recruit_mission = recruit_mission
         lua.globals().state = lua.table_from(recruit_mission.state)
         lua.globals().complete_mission = complete_mission
