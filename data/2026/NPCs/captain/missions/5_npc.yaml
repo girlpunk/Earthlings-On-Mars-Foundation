@@ -1,0 +1,23 @@
+id: 105
+name: "Test Mission: NPC"
+giveText: "Can you call the computer? I think it has some more stuff that needs doing."
+reminderText: "Have you spoken to the computer yet?"
+completionText: "Yay, well done!"
+type: "NPC"
+points: 10
+#followup_mission:
+priority: 5
+#onlyStartFrom:
+#prerequisites:
+#dependents:
+repeatable: True
+# time-limitations
+# TODO: Make this less annoying to use?
+#notBefore:
+#notAfter:
+#cancelAfterTime:
+#cancelAfterTries:
+#cancelText:
+
+# Call another NPC
+callAnother: 2

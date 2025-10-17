@@ -1,0 +1,20 @@
+id: 103
+name: "Test Mission: Count"
+giveText: "Right, how many ducks can you see from your current location? Have a count, then give me a call back and let me know."
+reminderText: "Right, how many ducks are there?"
+completionText: "Yay, well done!"
+type: "COUNT"
+points: 10
+#followup_mission:
+priority: 5
+#onlyStartFrom:
+#prerequisites:
+#dependents:
+repeatable: True
+# time-limitations
+# TODO: Make this less annoying to use?
+#notBefore:
+#notAfter:
+#cancelAfterTime:
+#cancelAfterTries:
+#cancelText:

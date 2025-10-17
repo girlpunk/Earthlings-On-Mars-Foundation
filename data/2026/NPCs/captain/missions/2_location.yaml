@@ -1,0 +1,23 @@
+id: 102
+name: "Test Mission: Location"
+giveText: "Ok, head over to stage 2 and give me a call back from the comms unit there."
+reminderText: "Are you at stage 2 yet?"
+completionText: "Yay, well done!"
+type: "LOCATION"
+points: 10
+#followup_mission:
+priority: 5
+#onlyStartFrom:
+#prerequisites:
+#dependents:
+repeatable: True
+# time-limitations
+# TODO: Make this less annoying to use?
+#notBefore:
+#notAfter:
+#cancelAfterTime:
+#cancelAfterTries:
+#cancelText:
+
+# Call from a specific location
+callBackFrom: 2

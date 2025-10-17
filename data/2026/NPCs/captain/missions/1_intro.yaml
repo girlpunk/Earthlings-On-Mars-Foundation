@@ -1,4 +1,4 @@
-id: 100
+id: 101
 name: "Test Mission"
 giveText: "This is a sample mission, call me back and say 123 please."
 reminderText: "Have you remembered what number to tell me?"
@@ -19,15 +19,6 @@ repeatable: True
 #cancelAfterTries:
 #cancelText:
 
-# Call from a specific location
-#callBackFrom:
-
-# Call another NPC
-#callAnother:
-
 # Call back with a code from a physical item
 code: 123
 incorrectText: "What? No you were meant to say 123. Give it another try."
-
-# Lua
-#lua: ""
