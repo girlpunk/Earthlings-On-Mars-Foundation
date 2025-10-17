@@ -32,17 +32,23 @@ For example:
 python.coroutine(say("Hello, World!"))
 ```
 
-### `complete_mission() -> None`
+### `complete_mission() -> Coroutine`
 
 Complete the active mission. This will result in the mission being recorded as successful, points being assigned, and the completion text being read.
 
 If you would like to add additional text before and/or after the completion text, this can be done by calling the `say()` method before or after respectively.
 
-### `say(text: str?) -> None`
+### `cancel_mission() -> Coroutine`
+
+Fails the active mission. This will result in the mission being recorded as failed, points being deducted, and the failure text being read.
+
+If you would like to add additional text before and/or after the completion text, this can be done by calling the `say()` method before or after respectively.
+
+### `say(text: str?) -> Coroutine`
 
 Read the specified text to the user.
 
-### `gather(text: str?, digits: int?, min_digits: int?, max_digits: int?) -> [str, str]`
+### `gather(text: str?, digits: int?, min_digits: int?, max_digits: int?) -> Coroutine[[str, str]]`
 
 Read the specified text to the user, and allow the user to reply with DTMF tones.
 
