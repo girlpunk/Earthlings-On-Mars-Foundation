@@ -1,3 +1,5 @@
+"""Websocket version of URLs."""
+
 from calls.consumers import CallConsumer
 from django.urls import path, re_path
 

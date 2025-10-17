@@ -1,8 +1,11 @@
+"""Standard HTTP requests."""
+
 from calls import models
-from django.http import FileResponse, HttpResponse
+from django.http import FileResponse, HttpRequest, HttpResponse
 
 
-def index(request) -> HttpResponse:
+def index(_: HttpRequest) -> HttpResponse:
+    """Index page."""
     return HttpResponse("Hello, world.")
 
 
@@ -332,7 +335,8 @@ def index(request) -> HttpResponse:
 #    return HttpResponse("OK")
 
 
-def speech(request, id) -> HttpResponse:
-    recording = models.Speech.get(id=id)
+def speech(request: HttpRequest, recording_id: int) -> HttpResponse:
+    """Look up a speech file and return it."""
+    recording = models.Speech.get(id=recording_id)
 
     return FileResponse(request, recording.recording)

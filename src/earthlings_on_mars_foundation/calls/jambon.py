@@ -1,4 +1,10 @@
-def gather(text, callback: str, digits=None, min_digits=None, max_digits=None):
+"""Jambonz helper functions."""
+
+from __future__ import annotations
+
+
+def gather(text: str, callback: str, digits: int | None = None, min_digits: int | None = None, max_digits: int | None = None) -> dict[str, str]:
+    """Get DTMF digits from the player."""
     data = {
         "verb": "gather",
         "actionHook": callback,
@@ -31,5 +37,6 @@ def gather(text, callback: str, digits=None, min_digits=None, max_digits=None):
     # self.  },
 
 
-def say(text):
+def say(text: str) -> dict[str, str]:
+    """Read text to the player."""
     return {"verb": "say", "text": text}

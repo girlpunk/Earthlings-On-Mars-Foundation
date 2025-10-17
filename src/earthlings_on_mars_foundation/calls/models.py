@@ -1,3 +1,5 @@
+"""Database models."""
+
 from __future__ import annotations
 
 from enum import IntEnum
@@ -7,16 +9,21 @@ from django.db import models
 
 
 class Recruit(models.Model):
-    # TODO: Reputations
+    """Player."""
+
+    # TODO(Me): Reputations https://github.com/girlpunk/Earthlings-On-Mars-Foundation/issues/1
     score = models.IntegerField(default=0)
     missions = models.ManyToManyField("Mission", through="RecruitMission")
     NPCs = models.ManyToManyField("NPC", through="RecruitNPC")
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """Get the recruit number."""
         return f"Recruit {self.pk}"
 
 
 class NPC(models.Model):
+    """Not player."""
+
     name = models.CharField(max_length=200, unique=True)
     extension = models.PositiveSmallIntegerField(
         help_text="What number is dialled (B-Number) to reach this NPC",
@@ -26,21 +33,28 @@ class NPC(models.Model):
     )
     recruits = models.ManyToManyField(Recruit, through="RecruitNPC")
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """Get the NPC name."""
         return self.name
 
     class Meta:
+        """Database table metadata."""
+
         verbose_name = "NPC"
         indexes: ClassVar[list[models.Index]] = [models.Index(fields=["extension"])]
 
 
 class RecruitNPC(models.Model):
+    """Player-NPC relation."""
+
     recruit = models.ForeignKey(Recruit, on_delete=models.CASCADE)
     NPC = models.ForeignKey(NPC, on_delete=models.CASCADE)
     contacted = models.BooleanField(default=False)
 
 
 class MissionTypes(IntEnum):
+    """Built-in ways a mission can work."""
+
     # Call from a specific location
     LOCATION = 1
 
@@ -51,7 +65,7 @@ class MissionTypes(IntEnum):
     CODE = 3
 
     # Two players complete an action at the same time
-    # TODO: Implement
+    # TODO(Me): Implement https://github.com/girlpunk/Earthlings-On-Mars-Foundation/issues/2
     # TOGETHER = 4
 
     # Get an arbitrary input, we don't really care what
@@ -61,24 +75,32 @@ class MissionTypes(IntEnum):
     LUA = 6
 
     @classmethod
-    def choices(cls):
+    def choices(cls: IntEnum) -> list[tuple[int, str]]:
+        """Iterate over mission types."""
         return [(key.value, key.name) for key in cls]
 
 
 class Location(models.Model):
+    """Known locations players can call from."""
+
     name = models.CharField(max_length=200, unique=True)
     extension = models.PositiveSmallIntegerField(
         help_text="What number do calls originate from (A-Number) when placed from this location",
     )
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """Get the location name."""
         return self.name
 
     class Meta:
+        """Database table metadata."""
+
         indexes: ClassVar[list[models.Index]] = [models.Index(fields=["extension"])]
 
 
 class Mission(models.Model):
+    """Takss for players."""
+
     name = models.CharField(max_length=200, unique=True)
     give_text = models.TextField(
         help_text="This text is given to the player when they initially begin the mission",
@@ -133,7 +155,6 @@ class Mission(models.Model):
     repeatable = models.BooleanField()
 
     # time-limitations
-    # TODO: Make this less annoying to use?
     not_before = models.DateTimeField(
         null=True,
         blank=True,
@@ -187,10 +208,13 @@ class Mission(models.Model):
     # Lua
     lua = models.TextField(help_text="Lua script for custom requirements", blank=True)
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """Get the name of the mission."""
         return self.name
 
     class Meta:
+        """Database table metadata."""
+
         constraints: ClassVar[list[models.CheckConstraint]] = [
             models.CheckConstraint(
                 condition=models.Q(priority__gte=1, priority__lte=10),
@@ -200,6 +224,8 @@ class Mission(models.Model):
 
 
 class MissionPrerequisite(models.Model):
+    """Missions that must be completed before other missions."""
+
     mission = models.ForeignKey(Mission, on_delete=models.PROTECT)
     prerequisite = models.ForeignKey(
         Mission,
@@ -207,16 +233,21 @@ class MissionPrerequisite(models.Model):
         related_name="prerequisite",
     )
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """Get a summary of the requirement."""
         return f"{self.mission} needs {self.prerequisite}"
 
     class Meta:
+        """Database table metadata."""
+
         indexes: ClassVar[list[models.Index]] = [
             models.Index(fields=["mission"]),
         ]
 
 
 class RecruitMission(models.Model):
+    """Recruit-mission data."""
+
     recruit = models.ForeignKey(Recruit, on_delete=models.CASCADE)
     mission = models.ForeignKey(Mission, on_delete=models.CASCADE)
     started = models.DateTimeField(auto_now_add=True)
@@ -227,7 +258,7 @@ class RecruitMission(models.Model):
     code_tries = models.PositiveSmallIntegerField(null=True)
 
     # Two players complete an action at the same time
-    # TODO: Implement
+    # TODO(Me): Implement https://github.com/girlpunk/Earthlings-On-Mars-Foundation/issues/2
 
     # Get an arbitrary input, we don't really care what
     count_value = models.PositiveIntegerField(null=True)
@@ -235,16 +266,21 @@ class RecruitMission(models.Model):
     # Lua state
     state = models.JSONField(default=dict, blank=True)
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """Get a summary of the mission assignment."""
         return f"{self.recruit} doing {self.mission}"
 
     class Meta:
+        """Database table metadata."""
+
         indexes: ClassVar[list[models.Index]] = [
             models.Index(fields=["recruit", "completed"]),
         ]
 
 
 class CallLog(models.Model):
+    """Logging data."""
+
     call_id = models.CharField(unique=True, max_length=64, primary_key=True)
     recruit = models.ForeignKey(
         Recruit,
@@ -265,11 +301,14 @@ class CallLog(models.Model):
     completed = models.BooleanField(default=False)
     success = models.BooleanField(default=False)
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """Get the call ID."""
         return self.call_id
 
 
 class Speech(models.Model):
+    """Pre-recorded speech."""
+
     NPC = models.ForeignKey(NPC, on_delete=models.CASCADE, null=True, blank=True)
     text = models.TextField()
     recording = models.FileField()

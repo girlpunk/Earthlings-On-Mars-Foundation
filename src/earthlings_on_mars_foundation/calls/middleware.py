@@ -1,9 +1,13 @@
+"""HTTP request logging middleware."""
+
+from __future__ import annotations
+
 import contextlib
 import json
 import logging
 import traceback
 
-from django.http import Http404
+from django.http import Http404, HttpRequest, HttpResponse
 from django.http.request import RawPostDataException
 from django.utils.deprecation import MiddlewareMixin
 
@@ -11,6 +15,8 @@ request_logger = logging.getLogger("django.customRequestLogger")
 
 
 class SessionLogMiddleware(MiddlewareMixin):
+    """Log requests."""
+
     # def __init__(self, get_response):
     #    self.get_response = get_response
 
@@ -39,7 +45,8 @@ class SessionLogMiddleware(MiddlewareMixin):
 
     #    return response
 
-    def save(self, request, response=None, exception=None, status_code=None):
+    def save(self, request: HttpRequest, response: HttpResponse | None = None, exception: Exception | None = None, status_code: int | None = None) -> None:
+        """Save data about a request and response pair."""
         headers = request.headers
         response_data = None
         request_data = None
@@ -48,19 +55,16 @@ class SessionLogMiddleware(MiddlewareMixin):
             request_data = json.loads(self.clean_text(request.body))
         except RawPostDataException:
             response_data = "RawPostDataException: You cannot access body after reading from request's data stream"
-        except Exception:
+        except Exception:  # noqa: BLE001
             with contextlib.suppress(Exception):
                 request_data = self.clean_text(request.body)
 
-        if (
-            "CONTENT_TYPE" not in headers
-            or headers["CONTENT_TYPE"] != "application/x-www-form-urlencoded"
-        ):
+        if "CONTENT_TYPE" not in headers or headers["CONTENT_TYPE"] != "application/x-www-form-urlencoded":
             try:
                 response_data = json.loads(self.clean_text(response.content))
             except RawPostDataException:
                 response_data = "RawPostDataException: You cannot access body after reading from request's data stream"
-            except Exception:
+            except Exception:  # noqa: BLE001
                 with contextlib.suppress(Exception):
                     response_data = self.clean_text(response.content)
 
@@ -79,7 +83,8 @@ class SessionLogMiddleware(MiddlewareMixin):
 
         request_logger.error(log_data) if exception else request_logger.info(log_data)
 
-    def process_exception(self, request, exception):
+    def process_exception(self, request: HttpRequest, exception: Exception) -> None:
+        """Log exception."""
         status_code = 404 if isinstance(exception, Http404) else 500
 
         try:
@@ -88,7 +93,8 @@ class SessionLogMiddleware(MiddlewareMixin):
             error = traceback.format_exc()
             request_logger.exception(error)
 
-    def process_response(self, request, response):
+    def process_response(self, request: HttpRequest, response: HttpResponse) -> HttpResponse:
+        """Log response."""
         try:
             response_data = {
                 "request": request,
@@ -103,25 +109,17 @@ class SessionLogMiddleware(MiddlewareMixin):
             request_logger.exception(error)
         return response
 
-    def clean_text(self, text):
+    def clean_text(self, text: str | bytes) -> str:
+        """Ensure text is loggable."""
         if isinstance(text, bytes):
             try:
-                return (
-                    text.decode("utf-8")
-                    .replace("\\n", "")
-                    .replace("\\t", "")
-                    .replace("\\r", "")
-                )
+                return text.decode("utf-8").replace("\\n", "").replace("\\t", "").replace("\\r", "")
             except Exception:
                 request_logger.exception()
         return str(text)
 
-    # get clients ip address
-    def get_client_ip(self, request):
+    def get_client_ip(self, request: HttpResponse) -> str:
+        """Get a client's IP address."""
         x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
 
-        return (
-            x_forwarded_for.split(",")[0]
-            if x_forwarded_for
-            else request.META.get("REMOTE_ADDR")
-        )
+        return x_forwarded_for.split(",")[0] if x_forwarded_for else request.META.get("REMOTE_ADDR")

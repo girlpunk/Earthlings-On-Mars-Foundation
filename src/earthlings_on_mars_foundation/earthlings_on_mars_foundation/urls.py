@@ -25,4 +25,5 @@ urlpatterns = [
     path("call/", include("calls.urls")),
     path("admin/", admin.site.urls),
     path(r"healthz/", include("health_check.urls")),
-] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    *static(settings.STATIC_URL, document_root=settings.STATIC_ROOT),
+]

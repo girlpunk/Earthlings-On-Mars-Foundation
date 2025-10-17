@@ -9,6 +9,8 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+from __future__ import annotations
+
 import logging
 import logging.config
 import os
@@ -20,9 +22,7 @@ logger = logging.getLogger("earthlings_on_mars_foundation.settings")
 
 
 def __get_boolean(key: str, default: str = "NO") -> bool:
-    """Return a boolean value based on whatever the user has supplied in the
-    environment based on whether the value "looks like" it's True or not.
-    """
+    """Return a boolean value based on whatever the user has supplied in the environment based on whether the value "looks like" it's True or not."""
     return bool(os.getenv(key, default).lower() in ("yes", "y", "1", "t", "true"))
 
 
@@ -31,9 +31,7 @@ def __get_list(
     default: list[str] | None = None,
     sep: str = ",",
 ) -> list[str]:
-    """Return a list of elements from the environment, as separated by the given
-    string, or the default if the key does not exist
-    """
+    """Return a list of elements from the environment, as separated by the given string, or the default if the key does not exist."""
     if key in os.environ:
         return list(filter(None, os.environ[key].split(sep)))
     if default is not None:
@@ -222,7 +220,7 @@ def _parse_db_settings() -> dict:
             "sslcert": os.getenv("DBSSLCERT", None),
             "sslkey": os.getenv("DBSSLKEY", None),
         }
-        if int(os.getenv("DB_POOLSIZE", 0)) > 0:
+        if int(os.getenv("DB_POOLSIZE", "0")) > 0:
             options.update(
                 {
                     "pool": {
