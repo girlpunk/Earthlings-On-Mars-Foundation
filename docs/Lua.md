@@ -37,6 +37,7 @@ python.coroutine(say("Hello, World!"))
 Complete the active mission. This will result in the mission being recorded as successful, points being assigned, and the completion text being read.
 
 If you would like to add additional text before and/or after the completion text, this can be done by calling the `say()` method before or after respectively.
+Messages will always be read in the voice of the NPC called, even if they are not the mission owner.
 
 ### `cancel_mission() -> Coroutine`
 
@@ -56,6 +57,8 @@ Optionally, a specific number of digits, or minimum and maximum number of digits
 If possible, these should be provided to speed up the timeout on collection.
 
 Results are provided as a tuple containing the string of digits, and a reason the collection stopped.
+
+TODO: provide a code example.
 
 ## Additional Objects
 
@@ -123,6 +126,8 @@ Number of attempts the player has made, when the mission type is to call back wi
 
 It is suggested to use `state` instead of this when building a mission with Lua.
 
+TODO: design descision around what state Lua is allowed to manipulate.
+
 #### `count_value = models.PositiveIntegerField(null=True)
 
 The value entered by the player, when the mission type is to call back with any number.
@@ -132,3 +137,5 @@ The value entered by the player, when the mission type is to call back with any 
 JSON value of the state object for Lua missions.
 
 It is suggested to use `state` instead of this when building a mission with Lua.
+
+TODO: provide a code example.

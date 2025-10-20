@@ -6,6 +6,8 @@ Each YAML file has an ID number, which uniquely identifies it within that type o
 
 Definitions of YAML are outside the scope of this document.
 
+TODO: Design and document per-npc reputation system.
+
 ## Locations
 
 Locations represent known locations that players can call from.
@@ -41,7 +43,7 @@ Phone number that calls to this NPC will indicate ("B Number").
 
 ### `introduction`
 
-Text that will be read to the player when they call this NPC forthe first time.
+Text that will be read to the player when they call this NPC for the first time.
 
 ## Missions
 
@@ -66,10 +68,12 @@ Text that will be read to the player when they are issued this mission
 #### `reminderText`
 
 Text that will be read to the player when they call the issuing NPC back before completing the mission.
+Design note: It is possible the player might not hear/remember all of `giveText` (call disconnected, got distracted, etc), so this should remind them of the key details.
 
 #### `completionText`
 
 Text that will be read to the player when they successfully complete the mission.
+This will be read in the voice of the NPC called, who may be different from the NPC who issued the mission.
 
 #### `type`
 
@@ -78,14 +82,18 @@ Type of mission, see below for specific types and details.
 #### `points`
 
 Points issues to the player when they successfully complete the mission, or removed from the user when they fail the mission.
+Points will not be directly visible to players.  Points may be replaced/supplemented by per-npc reputation.
 
 #### `followupMission`
 
-ID of a mission to immidiately start after successful completion of this mission.
+ID of a mission to immediately start after successful completion of this mission.
+The owner of this mission must match the voice of `completionText`.
 
 #### `priority`
 
 Importance of this mission compared to other missions. If multiple missions are available, the higher priority will be issued first.
+
+TODO: Example ranges.
 
 #### `onlyStartFrom`
 
@@ -114,14 +122,16 @@ Wall time that this mission cannot be started after.
 #### `cancelAfterTime`
 
 Wall time that this mission will automatically be cancelled at.
+This is intended to assign missions to specific days of the event, etc.
 
 #### `cancelAfterTries`
 
 Failed completions that this mission will automatically be cancelled after.
+A try is a call to the issuing NPC.
 
 #### `cancelText`
 
-Text read to the player when the mission is cancelled.
+Text read to the player when the mission is cancelled.  This will be on their next call to that NPC.
 
 ### Mission Types
 
