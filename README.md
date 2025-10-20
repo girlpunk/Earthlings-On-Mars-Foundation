@@ -16,6 +16,15 @@
 pip install earthlings-on-mars-foundation
 ```
 
+## Run Locally
+
+```shell
+nix develop --command $SHELL
+cd src/earthlings_on_mars_foundation
+./manage.py migrate
+DEBUG=true ./manage.py runserver
+```
+
 ## License
 
 `earthlings-on-mars-foundation` is distributed under the terms of the [MIT](https://spdx.org/licenses/MIT.html) license.
