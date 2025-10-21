@@ -8,6 +8,7 @@ import datetime
 import json
 import logging
 import threading
+import uuid
 
 from calls import models
 from calls.lua import AsyncLuaRuntime
@@ -15,7 +16,7 @@ from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from django.db.models import Count, Exists, F, OuterRef, Q
 from django.urls import reverse
 
-request_logger = logging.getLogger("django.customRequestLogger")
+request_logger = logging.getLogger("django.calls.consumer")
 
 
 class InvalidMessageError(Exception):
@@ -24,7 +25,7 @@ class InvalidMessageError(Exception):
     def __init__(self, msg_type: str, data: dict[str, str]) -> None:
         """Prepare the message exception."""
         super().__init__(
-            "Unknown message type {}. Message body: {}",
+            "Unknown message type %s. Message body: %s",
             msg_type,
             data,
         )
@@ -33,17 +34,18 @@ class InvalidMessageError(Exception):
 class CallConsumer(AsyncJsonWebsocketConsumer):
     """Manage websocket connections."""
 
-    async def connect(self) -> None:
-        """Handle a new incoming connection."""
+    def __init__(self) -> None:
+        super().__init__()
         self.incomingMessage = None
         self.newMessage = threading.Event()
-        self.outbound = []
         self.callLog = None
         self.active_message = None
         self.ack_done = False
         self.action_thread = None
 
-        await self.accept("ws.jambonz.org")
+    async def connect(self) -> None:
+        """Handle a new incoming connection."""
+        request_logger.info("New connect!")
 
     async def disconnect(self, _: str) -> None:
         """Handle a disconnect."""
@@ -55,29 +57,6 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
         """Handle an incoming message."""
         data = json.loads(text_data)
         await self.receive_json(data)
-
-    async def receive_json(self, data: str) -> None:
-        """Decode message data from JSON, and send to the relevent handler."""
-        request_logger.info("IN: %s", data)
-
-        if data["type"] == "session:new":
-            await self._session_new(data)
-        elif data["type"] == "session:reconnect":
-            await self._session_reconnect(data)
-        elif data["type"] == "call:status":
-            await self._update_log(data)
-            message = {"type": "ack", "msgid": data["msgid"]}
-            request_logger.info("OUT: %s", message)
-            await self.send_json(message)
-        elif data["type"] == "verb:hook":
-            self.incomingMessage = data
-            self.active_message = data["msgid"]
-            self.newMessage.set()
-        else:
-            raise InvalidMessageError(
-                data["type"],
-                data,
-            )
 
     async def _authenticate(self) -> models.Recruit:
         """Allow a player to authenticate themselves."""
@@ -332,34 +311,8 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
 
         self.outbound.clear()
 
-    async def _say(self, text: str, npc: models.NPC | None = None) -> None:
-        """Read text to the player."""
-        if npc is None and self.callLog.NPC is None:
-            request_logger.warning("Say with unknown NPC!")
-            self.outbound.append({"say": {"text": text}})
-            return
-        if npc is None:
-            npc = self.callLog.NPC
-
-        recording, created = models.Speech.objects.get_or_create(NPC=npc, text=text)
-
-        if created or recording.recording is None:
-            request_logger.warning("Missing text for %s: %s", npc.name, text)
-            self.outbound.append({"say": {"text": text}})
-        else:
-            self.outbound.append(
-                {
-                    "play": {
-                        "url": reverse("speech", kwargs={"id": recording.id}),
-                    },
-                },
-            )
-
-    async def _session_new(self, data: str) -> None:
+    async def _session_new(self) -> None:
         """Start processing a new call."""
-        self.active_message = data["msgid"]
-        await self._update_log(data)
-
         # Start a second thread to actually execute the call logic
         self.action_thread = threading.Thread(
             target=asyncio.run,
@@ -397,9 +350,7 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
                 await self._find_new_mission(recruit)
 
             # Send hangup
-            self.outbound.append({"hangup": {}})
-
-            await self._send()
+            await self._hangup()
 
             if self.callLog is not None:
                 self.callLog.completed = True
@@ -407,15 +358,14 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
                 await self.callLog.asave()
         except Exception:
             await self._say("Sorry, something went wrong")
-            self.outbound.append({"hangup": {}})
-            await self._send()
+            await self._hangup()
 
             if self.callLog is not None:
                 self.callLog.completed = True
                 self.callLog.success = False
                 await self.callLog.asave()
 
-            request_logger.exception()
+            request_logger.exception("Error during call processing")
 
     async def _find_new_mission(self, recruit: models.recruit) -> None:
         """Find a new mission for the player to start."""
@@ -489,6 +439,13 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
         # TODO(Me): Implement https://github.com/girlpunk/Earthlings-On-Mars-Foundation/issues/3
         raise NotImplementedError
 
+
+class JambonzCallConsumer(CallConsumer):
+    async def connect(self) -> None:
+        self.outbound = []
+        super().connect()
+        await self.accept("ws.jambonz.org")
+
     async def _update_log(self, message: str) -> None:
         """Update the log for an in-progress call."""
         if self.callLog is None:
@@ -516,3 +473,183 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
             self.callLog.completed = True
 
         await self.callLog.asave()
+
+    async def receive_json(self, data: str) -> None:
+        """Decode message data from JSON, and send to the relevent handler."""
+        request_logger.info("IN: %s", data)
+
+        if data["type"] == "session:new":
+            self.active_message = data["msgid"]
+            await self._update_log(data)
+            await self._session_new()
+        elif data["type"] == "session:reconnect":
+            await self._session_reconnect(data)
+        elif data["type"] == "call:status":
+            await self._update_log(data)
+            message = {"type": "ack", "msgid": data["msgid"]}
+            request_logger.info("OUT: %s", message)
+            await self.send_json(message)
+        elif data["type"] == "verb:hook":
+            self.incomingMessage = data
+            self.active_message = data["msgid"]
+            self.newMessage.set()
+        else:
+            raise InvalidMessageError(
+                data["type"],
+                data,
+            )
+
+    async def _say(self, text: str, npc: models.NPC | None = None) -> None:
+        """Read text to the player."""
+        if npc is None and self.callLog.NPC is None:
+            request_logger.warning("Say with unknown NPC!")
+            self.outbound.append({"say": {"text": text}})
+            return
+        if npc is None:
+            npc = self.callLog.NPC
+
+        recording, created = models.Speech.objects.get_or_create(NPC=npc, text=text)
+
+        if created or recording.recording is None:
+            request_logger.warning("Missing text for %s: %s", npc.name, text)
+            self.outbound.append({"say": {"text": text}})
+        else:
+            self.outbound.append(
+                {
+                    "play": {
+                        "url": reverse("speech", kwargs={"id": recording.id}),
+                    },
+                },
+            )
+
+    async def _hangup(self) -> None:
+        self.outbound.append({"hangup": {}})
+
+        await self._send()
+
+
+class AsteriskCallConsumer(CallConsumer):
+    async def connect(self) -> None:
+        request_logger.info("Asterisk connect")
+        print("Asterisk connect!")
+        super().connect()
+        await self.accept()
+
+    async def _update_log(self, message: str) -> None:
+        """Update the log for an in-progress call."""
+        if self.callLog is None:
+            self.callLog, created = await models.CallLog.objects.aget_or_create(
+                call_id=message["channel"]["id"],
+                defaults={"duration": 0, "digits": 0},
+            )
+
+        if self.callLog.NPC is None:
+            with contextlib.suppress(models.NPC.DoesNotExist, ValueError):
+                extension = int(message["channel"]["dialplan"]["exten"])
+                self.callLog.NPC = await models.NPC.objects.aget(
+                    extension=extension,
+                )
+
+        if self.callLog.location is None:
+            with contextlib.suppress(ValueError, models.Location.DoesNotExist):
+                self.callLog.location = await models.Location.objects.aget(
+                    extension=message["channel"]["caller"]["number"],
+                )
+
+        # if "duration" in message["data"]:
+        stamp = datetime.datetime.fromisoformat(message["timestamp"])
+        created = datetime.datetime.fromisoformat(message["channel"]["creationtime"])
+        self.callLog.duration = (stamp - created).total_seconds()
+
+        if message["channel"]["state"] != "Up":
+            self.callLog.completed = True
+
+        await self.callLog.asave()
+
+    async def receive_json(self, data: str) -> None:
+        """Decode message data from JSON, and sent to the relevent handler."""
+        request_logger.info("IN: %s", data)
+
+        if data["type"] == "ApplicationRegistered":
+            request_logger.info("ApplicationRegistered")
+        elif data["type"] == "StasisStart":
+            # self.active_message = data["msgid"]
+            await self._update_log(data)
+            # await self._send("POST", f"channels/{data["channel"]["id"]}/moh", mohClass="default")
+            await self._session_new()
+        elif data["type"] == "ChannelVarset":
+            pass
+        elif data["type"] == "ChannelHangupRequest":
+            request_logger.info(f"Hangup {data['cause']}")
+            data["channel"]["state"] = "Down"
+            await self._update_log(data)
+            # TODO: Stop thread
+        elif data["type"] == "ChannelDialplan" or data["type"] == "ChannelUserevent" or data["type"] == "StasisEnd":
+            # TODO: Figure out what this is for
+            await self._update_log(data)
+        elif data["type"] == "DeviceStateChanged":
+            pass
+        elif data["type"] == "ChannelDestroyed":
+            request_logger.info(f"Hangup {data['cause']}")
+            data["channel"]["state"] = "Down"
+            await self._update_log(data)
+            # TODO: Stop thread
+        else:
+            raise InvalidMessageError(
+                data["type"],
+                data,
+            )
+
+    async def _send(self, method: str | None, uri: str, **kwargs: dict[str, str]) -> None:
+        if method is None:
+            pass
+
+        request = {
+            "type": "RESTRequest",
+            "request_id": str(uuid.uuid4()),
+            "method": method,
+            "uri": uri,
+        }
+
+        for key, value in kwargs.items():
+            request[key] = value
+
+        request_logger.info("OUT: %s %s - %s", method, uri, request)
+        await self.send_json(request)
+
+        return_object = {"result": ""}
+        # if wait_for_response:
+        #    return_object['event'] = asyncio.Event()
+
+        # self.requests[uuidstr] = rtnobj
+        # await self.websocket.send(msg.encode('utf-8'), text=True)
+        # if wait_for_response:
+        #    await rtnobj['event'].wait()
+        # del self.requests[uuidstr]
+        # resp = rtnobj['result']
+        # self.log(INFO, f"RESTResponse: {method} {uri} {resp['status_code']} {resp['reason_phrase']}")
+        # if callback is not None:
+        #    return callback(self.websocket, uuidstr, req, rtnobj['result'])
+        # return rtnobj['result']
+
+    async def _say(self, text: str, npc: models.NPC | None = None) -> None:
+        """Read text to the player."""
+        if npc is None and self.callLog.NPC is None:
+            request_logger.warning("Say with unknown NPC!")
+            # self.outbound.append({"say": {"text": text}})
+            return
+        if npc is None:
+            npc = self.callLog.NPC
+
+        recording, created = models.Speech.objects.get_or_create(NPC=npc, text=text)
+
+        if created or recording.recording is None:
+            request_logger.warning("Missing text for %s: %s", npc.name, text)
+            await self._send("POST", f"channels/{self.callLog.call_id}/dtmf", dtmf="012345678ABCD#*")
+        #    self.outbound.append({"say": {"text": text}})
+        else:
+            await self._send("POST", f"channels/{self.callLog.call_id}/play", media=reverse("speech", kwargs={"id": recording.id}))
+
+    async def _hangup(self) -> None:
+        # await self._send("DELETE", f"channels/{self.callLog.call_id}", reason_code=16)
+        pass
