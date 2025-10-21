@@ -125,9 +125,20 @@
 
             # Enable the YAML formatter
             programs.yamlfmt.enable = true;
+            settings.formatter.yamllint = {
+              command = "${pkgs.yamllint}/bin/yamllint";
+              includes = ["*.yaml" "*.yml"];
+            };
+
+            # Enable the Markdown formatter
+            programs.mdformat.enable = true;
 
             # Enable the Lua formatter
             programs.stylua.enable = true;
+            settings.formatter.selene = {
+              command = "${pkgs.selene}/bin/selene";
+              includes = ["*.lua"];
+            };
 
             # Enable the Python formatters
             programs.ruff-format = {

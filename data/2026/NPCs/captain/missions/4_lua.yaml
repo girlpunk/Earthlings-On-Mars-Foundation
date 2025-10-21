@@ -1,3 +1,4 @@
+---
 id: 104
 name: "Test Mission: Lua"
 giveText: "This one is a bit more complicated, Can you give me a call back 3 more times?"
@@ -5,26 +6,15 @@ reminderText: "Does this text ever get used?"
 completionText: "Yay, well done!"
 type: "LUA"
 points: 10
-#followup_mission:
+# followup_mission:
 priority: 5
-#onlyStartFrom:
-#prerequisites:
-#dependents:
-repeatable: True
+# onlyStartFrom:
+# prerequisites:
+# dependents:
+repeatable: true
 # time-limitations
-# TODO: Make this less annoying to use?
-#notBefore:
-#notAfter:
-#cancelAfterTime:
-#cancelAfterTries:
-#cancelText:
-
-# Lua
-lua: |
-  if state.calls == nil then
-    state.calls = 0
-  end
-
-  state.calls += 1
-
-  python.coroutine(say("Great, you've called " .. state.calls .. " times now!"))
+# notBefore:
+# notAfter:
+# cancelAfterTime:
+# cancelAfterTries:
+# cancelText:

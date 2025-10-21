@@ -217,10 +217,10 @@ def load_npcs(source: Path) -> None:
             with mission_path.open(encoding="utf-8") as f:
                 mission = yaml.safe_load(f)
 
-                update_mission(mission, db_npc)
+                update_mission(mission, mission_path, db_npc)
 
 
-def update_mission(mission: dict, db_npc: models.NPC) -> None:
+def update_mission(mission: dict, path: Path, db_npc: models.NPC) -> None:
     """Update a mission."""
     db_mission, _ = models.Mission.objects.get_or_create(
         pk=mission["id"],
@@ -245,7 +245,7 @@ def update_mission(mission: dict, db_npc: models.NPC) -> None:
     db_mission.save()
 
     update_mission_metadata(mission, db_mission)
-    update_mission_completion(mission, db_mission)
+    update_mission_completion(mission, path, db_mission)
 
 
 def update_mission_metadata(mission: dict, db_mission: models.Mission) -> None:  # noqa:C901
@@ -292,7 +292,7 @@ def update_mission_metadata(mission: dict, db_mission: models.Mission) -> None: 
         db_mission.cancel_text = mission["cancelText"]
 
 
-def update_mission_completion(mission: dict, db_mission: models.Mission) -> None:
+def update_mission_completion(mission: dict, path: Path, db_mission: models.Mission) -> None:
     """Update the completion requirements for a mession."""
     if "callBackFrom" in mission:
         db_mission.call_back_from = mission["callBackFrom"]
@@ -305,8 +305,8 @@ def update_mission_completion(mission: dict, db_mission: models.Mission) -> None
     if "incorrectText" in mission:
         db_mission.incorrect_text = mission["incorrectText"]
 
-    if "lua" in mission:
-        db_mission.lua = mission["lua"]
+    if db_mission.type == models.MissionTypes.LUA:
+        db_mission.lua = path.with_suffix(".lua").read_text(encoding="utf-8")
 
     db_mission.save()
 

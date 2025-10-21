@@ -5,10 +5,11 @@ Lua is a scripting language that can be used to define custom missions.
 General details about Lua are outside the scope of this document, however some additional functionality is available through the engine.
 
 You may find the following references useful:
-  - [Learn X in Y minutes](https://learnxinyminutes.com/lua/)
-  - [Devhints Lua cheatsheet](https://devhints.io/lua)
-  - [GitHub Lua cheatsheet](https://gist.github.com/nilesh-tawari/02078ae5b83ce3c90f476c4858c60693)
-  - [opensource.com Lua Cheatsheet](https://opensource.com/sites/default/files/gated-content/cheat_sheet_lua.pdf)
+
+- [Learn X in Y minutes](https://learnxinyminutes.com/lua/)
+- [Devhints Lua cheatsheet](https://devhints.io/lua)
+- [GitHub Lua cheatsheet](https://gist.github.com/nilesh-tawari/02078ae5b83ce3c90f476c4858c60693)
+- [opensource.com Lua Cheatsheet](https://opensource.com/sites/default/files/gated-content/cheat_sheet_lua.pdf)
 
 ## Available Objects
 
@@ -123,7 +124,7 @@ Number of attempts the player has made, when the mission type is to call back wi
 
 It is suggested to use `state` instead of this when building a mission with Lua.
 
-#### `count_value = models.PositiveIntegerField(null=True)
+#### `count_value = models.PositiveIntegerField(null=True)`
 
 The value entered by the player, when the mission type is to call back with any number.
 

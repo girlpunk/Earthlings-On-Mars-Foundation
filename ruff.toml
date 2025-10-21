@@ -1,5 +1,4 @@
 line-length = 180
 
 [lint]
-ignore = ["D203", "D213"]
-
+ignore = ["D203", "D213", "FIX002"]

@@ -1,0 +1,39 @@
+---
+base: lua53 # We will be extending off of Lua 5.3.
+lua_versions:
+  - luajit
+globals:
+  recruit_mission:
+    property: read-only
+    type: table
+  state:
+    type: table
+    property: full-write
+  complete_mission:
+    args: []
+    must_use: true
+  cancel_mission:
+    args: []
+    must_use: true
+  say:
+    args:
+      - required: true  # text
+        type: string
+        observes: read
+    must_use: true
+  gather:
+    args:
+      - required: true  # text
+        type: string
+        observes: read
+      - required: false  # digits
+        type: number
+      - required: false  # min_digits
+        type: number
+      - required: false  # max_digits
+        type: number
+    must_use: true
+  python.coroutine:
+    args:
+      - type: any
+    must_use: false

@@ -166,4 +166,3 @@ Lua code to run to determine if the mission should be completed. This is capable
 Lua script to run.
 
 See [Lua](Lua.md) for more details.
-
