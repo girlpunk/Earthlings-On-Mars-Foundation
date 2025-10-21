@@ -194,7 +194,7 @@ def _parse_db_settings() -> dict:
     databases = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
-            "NAME": "db.sqlite3",
+            "NAME": os.getenv("DBPATH", "db.sqlite3"),
             "OPTIONS": {},
         },
     }
