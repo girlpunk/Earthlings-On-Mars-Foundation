@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import asyncio
 import contextlib
 import datetime
@@ -164,5 +162,6 @@ class AsteriskCallConsumer(CallConsumer):
         #TODO
         # await self._send("DELETE", f"channels/{self.callLog.call_id}", reason_code=16)
         pass
+
 
 # vim: tw=0 ts=4 sw=4
