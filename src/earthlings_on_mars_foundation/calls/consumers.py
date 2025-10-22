@@ -10,6 +10,7 @@ import logging
 import threading
 import uuid
 
+from asgiref.sync import sync_to_async
 from calls import models
 from calls.lua import AsyncLuaRuntime
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
@@ -238,61 +239,13 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
 
         await self._say(recruit_mission.mission.completion_text)
 
-    async def _gather(
-        self,
-        text: str,
-        digits: int | None = None,
-        min_digits: int | None = None,
-        max_digits: int | None = None,
-    ) -> [str, str]:
-        """Gather DTMF digits from the player."""
-        command = {
-            "input": ["digits"],  # Can also include "speech"
-            "actionHook": "wss://fa8340b16a8854.lhr.life/ws/call/",
-            "bargein": False,
-            "dtmfBargein": True,
-            "finishOnKey": "#",
-            "say": {"text": text},
-            "interDigitTimeout": 5,
-        }
-
-        if digits is not None:
-            command["numDigits"] = digits
-        if min_digits is not None:
-            command["minDigits"] = min_digits
-        if max_digits is not None:
-            command["maxDigits"] = max_digits
-
-        recording, created = models.Speech.objects.get_or_create(
-            NPC=self.callLog.NPC,
+    @sync_to_async
+    def speech_get_or_create(self, npc: models.NPC, text: str):
+        # TODO handle NPC being null, fall back to defalt for error msgs etc
+        return models.Speech.objects.get_or_create(
+            NPC=npc,
             text=text,
         )
-
-        if created or recording.recording is None:
-            request_logger.warning("Missing text for %s: %s", self.callLog.NPC.name, text)
-            command["say"] = {"text": text}
-        else:
-            command["play"] = {
-                "url": reverse("speech", kwargs={"id": recording.id}),
-            }
-
-        self.outbound.append({"gather": command})
-
-        await self._send()
-
-        self.newMessage.wait(20)
-        value = self.incomingMessage
-        self.newMessage.clear()
-        self.incomingMessage = None
-
-        digits = None
-
-        if "digits" in value["data"]:
-            digits = value["data"]["digits"]
-            self.callLog.digits += len(digits)
-            await self.callLog.asave()
-
-        return (digits, value["data"]["reason"])
 
     async def _send(self) -> None:
         """Send a command to Jambonz."""
@@ -508,7 +461,7 @@ class JambonzCallConsumer(CallConsumer):
         if npc is None:
             npc = self.callLog.NPC
 
-        recording, created = models.Speech.objects.get_or_create(NPC=npc, text=text)
+        recording, created = await self.speech_get_or_create(npc=npc, text=text)
 
         if created or recording.recording is None:
             request_logger.warning("Missing text for %s: %s", npc.name, text)
@@ -522,6 +475,59 @@ class JambonzCallConsumer(CallConsumer):
                 },
             )
 
+    async def _gather(
+        self,
+        text: str,
+        digits: int | None = None,
+        min_digits: int | None = None,
+        max_digits: int | None = None,
+    ) -> [str, str]:
+        """Gather DTMF digits from the player."""
+        command = {
+            "input": ["digits"],  # Can also include "speech"
+            "actionHook": "wss://fa8340b16a8854.lhr.life/ws/call/",
+            "bargein": False,
+            "dtmfBargein": True,
+            "finishOnKey": "#",
+            "say": {"text": text},
+            "interDigitTimeout": 5,
+        }
+
+        if digits is not None:
+            command["numDigits"] = digits
+        if min_digits is not None:
+            command["minDigits"] = min_digits
+        if max_digits is not None:
+            command["maxDigits"] = max_digits
+
+        recording, created = await self.speech_get_or_create(npc=self.callLog.NPC, text=text)
+
+        if created or recording.recording is None:
+            request_logger.warning("Missing text for %s: %s", self.callLog.NPC.name, text)
+            command["say"] = {"text": text}
+        else:
+            command["play"] = {
+                "url": reverse("speech", kwargs={"recording_id": recording.id}),
+            }
+
+        self.outbound.append({"gather": command})
+
+        await self._send()
+
+        self.newMessage.wait(20)
+        value = self.incomingMessage
+        self.newMessage.clear()
+        self.incomingMessage = None
+
+        digits = None
+
+        if "digits" in value["data"]:
+            digits = value["data"]["digits"]
+            self.callLog.digits += len(digits)
+            await self.callLog.asave()
+
+        return (digits, value["data"]["reason"])
+
     async def _hangup(self) -> None:
         self.outbound.append({"hangup": {}})
 
@@ -530,15 +536,15 @@ class JambonzCallConsumer(CallConsumer):
 
 class AsteriskCallConsumer(CallConsumer):
     async def connect(self) -> None:
-        request_logger.info("Asterisk connect")
-        print("Asterisk connect!")
+        request_logger.info("Asterisk connect()")
         super().connect()
         await self.accept()
 
-    async def _update_log(self, message: str) -> None:
+    @sync_to_async
+    def _update_log(self, message: str) -> None:
         """Update the log for an in-progress call."""
         if self.callLog is None:
-            self.callLog, created = await models.CallLog.objects.aget_or_create(
+            self.callLog, created = models.CallLog.objects.get_or_create(
                 call_id=message["channel"]["id"],
                 defaults={"duration": 0, "digits": 0},
             )
@@ -546,13 +552,13 @@ class AsteriskCallConsumer(CallConsumer):
         if self.callLog.NPC is None:
             with contextlib.suppress(models.NPC.DoesNotExist, ValueError):
                 extension = int(message["channel"]["dialplan"]["exten"])
-                self.callLog.NPC = await models.NPC.objects.aget(
+                self.callLog.NPC = models.NPC.objects.get(
                     extension=extension,
                 )
 
         if self.callLog.location is None:
             with contextlib.suppress(ValueError, models.Location.DoesNotExist):
-                self.callLog.location = await models.Location.objects.aget(
+                self.callLog.location = models.Location.objects.get(
                     extension=message["channel"]["caller"]["number"],
                 )
 
@@ -564,7 +570,7 @@ class AsteriskCallConsumer(CallConsumer):
         if message["channel"]["state"] != "Up":
             self.callLog.completed = True
 
-        await self.callLog.asave()
+        self.callLog.asave()
 
     async def receive_json(self, data: str) -> None:
         """Decode message data from JSON, and sent to the relevent handler."""
@@ -641,14 +647,26 @@ class AsteriskCallConsumer(CallConsumer):
         if npc is None:
             npc = self.callLog.NPC
 
-        recording, created = models.Speech.objects.get_or_create(NPC=npc, text=text)
+        recording, created = await self.speech_get_or_create(npc=npc, text=text)
 
-        if created or recording.recording is None:
+        if recording.recording is None:
             request_logger.warning("Missing text for %s: %s", npc.name, text)
             await self._send("POST", f"channels/{self.callLog.call_id}/dtmf", dtmf="012345678ABCD#*")
         #    self.outbound.append({"say": {"text": text}})
         else:
-            await self._send("POST", f"channels/{self.callLog.call_id}/play", media=reverse("speech", kwargs={"id": recording.id}))
+            await self._send("POST", f"channels/{self.callLog.call_id}/play", media=reverse("speech", kwargs={"recording_id": recording.id}))
+
+    async def _gather(
+        self,
+        text: str,
+        digits: int | None = None,
+        min_digits: int | None = None,
+        max_digits: int | None = None,
+    ) -> [str, str]:
+        """Gather DTMF digits from the player."""
+
+        # TODO implement
+        return ("", "not implemented TODO.")
 
     async def _hangup(self) -> None:
         # await self._send("DELETE", f"channels/{self.callLog.call_id}", reason_code=16)
