@@ -574,37 +574,41 @@ class AsteriskCallConsumer(CallConsumer):
 
     async def receive_json(self, data: str) -> None:
         """Decode message data from JSON, and sent to the relevent handler."""
-        request_logger.info("IN: %s", data)
+        #request_logger.info("IN: %s", data)
 
-        if data["type"] == "ApplicationRegistered":
+        mtype = data["type"]
+        if mtype == "ApplicationRegistered":
             request_logger.info("ApplicationRegistered")
-        elif data["type"] == "StasisStart":
+        elif mtype == "StasisStart":
             # self.active_message = data["msgid"]
             await self._update_log(data)
             # await self._send("POST", f"channels/{data["channel"]["id"]}/moh", mohClass="default")
             await self._session_new()
-        elif data["type"] == "ChannelVarset":
+        elif mtype == "ChannelCreated":
             pass
-        elif data["type"] == "ChannelHangupRequest":
+        elif mtype == "ChannelVarset":
+            pass
+        elif mtype == "ChannelHangupRequest":
             request_logger.info(f"Hangup {data['cause']}")
             data["channel"]["state"] = "Down"
             await self._update_log(data)
             # TODO: Stop thread
-        elif data["type"] == "ChannelDialplan" or data["type"] == "ChannelUserevent" or data["type"] == "StasisEnd":
+        elif mtype == "ChannelDialplan" or mtype == "ChannelUserevent" or mtype == "StasisEnd":
             # TODO: Figure out what this is for
             await self._update_log(data)
-        elif data["type"] == "DeviceStateChanged":
+        elif mtype == "DeviceStateChanged":
             pass
-        elif data["type"] == "ChannelDestroyed":
+        elif mtype == "ChannelDestroyed":
             request_logger.info(f"Hangup {data['cause']}")
             data["channel"]["state"] = "Down"
             await self._update_log(data)
             # TODO: Stop thread
+        elif mtype == "ChannelDtmfReceived":
+            digit = data["digit"]
+            print(f"TONE digit: {digit}")
+            # TODO implement gathering digits
         else:
-            raise InvalidMessageError(
-                data["type"],
-                data,
-            )
+            raise InvalidMessageError(mtype, data)
 
     async def _send(self, method: str | None, uri: str, **kwargs: dict[str, str]) -> None:
         if method is None:
