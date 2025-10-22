@@ -1,0 +1,168 @@
+from __future__ import annotations
+
+import asyncio
+import contextlib
+import datetime
+import json
+import logging
+import uuid
+
+from asgiref.sync import sync_to_async
+from calls import models
+from calls.consumers import CallConsumer, InvalidMessageError
+from django.db.models import Count, Exists, F, OuterRef, Q
+from django.urls import reverse
+
+request_logger = logging.getLogger("eomf.calls.consumer.asterisk")
+
+
+class AsteriskCallConsumer(CallConsumer):
+    async def connect(self) -> None:
+        request_logger.info("Asterisk connect()")
+        super().connect()
+        await self.accept()
+
+    @sync_to_async
+    def _update_log(self, message: str) -> None:
+        """Update the log for an in-progress call."""
+        if self.callLog is None:
+            self.callLog, created = models.CallLog.objects.get_or_create(
+                call_id=message["channel"]["id"],
+                defaults={"duration": 0, "digits": 0},
+            )
+
+        if self.callLog.NPC is None:
+            with contextlib.suppress(models.NPC.DoesNotExist, ValueError):
+                extension = int(message["channel"]["dialplan"]["exten"])
+                self.callLog.NPC = models.NPC.objects.get(
+                    extension=extension,
+                )
+
+        if self.callLog.location is None:
+            with contextlib.suppress(ValueError, models.Location.DoesNotExist):
+                self.callLog.location = models.Location.objects.get(
+                    extension=message["channel"]["caller"]["number"],
+                )
+
+        # if "duration" in message["data"]:
+        stamp = datetime.datetime.fromisoformat(message["timestamp"])
+        created = datetime.datetime.fromisoformat(message["channel"]["creationtime"])
+        self.callLog.duration = (stamp - created).total_seconds()
+
+        if message["channel"]["state"] != "Up":
+            self.callLog.completed = True
+
+        self.callLog.asave()
+
+    async def receive_json(self, data: str) -> None:
+        """Decode message data from JSON, and sent to the relevent handler."""
+        #request_logger.info("IN: %s", data)
+
+        mtype = data["type"]
+        if mtype == "ApplicationRegistered":
+            request_logger.info("ApplicationRegistered")
+        elif mtype == "StasisStart":
+            # self.active_message = data["msgid"]
+            await self._update_log(data)
+            # await self._send("POST", f"channels/{data["channel"]["id"]}/moh", mohClass="default")
+            await self._session_new()
+        elif mtype == "ChannelCreated":
+            pass
+        elif mtype == "ChannelVarset":
+            pass
+        elif mtype == "ChannelHangupRequest":
+            request_logger.info(f"Hangup {data['cause']}")
+            data["channel"]["state"] = "Down"
+            await self._update_log(data)
+            # TODO: Stop thread
+        elif mtype == "ChannelDialplan" or mtype == "ChannelUserevent" or mtype == "StasisEnd":
+            # TODO: Figure out what this is for
+            await self._update_log(data)
+        elif mtype == "DeviceStateChanged":
+            pass
+        elif mtype == "ChannelDestroyed":
+            request_logger.info(f"Hangup {data['cause']}")
+            data["channel"]["state"] = "Down"
+            await self._update_log(data)
+            # TODO: Stop thread
+        elif mtype == "ChannelDtmfReceived":
+            digit = data["digit"]
+            print(f"TONE digit: {digit}")
+            # TODO implement gathering digits
+        else:
+            raise InvalidMessageError(mtype, data)
+
+    async def _send(self, method: str | None, uri: str, **kwargs: dict[str, str]) -> None:
+        if method is None:
+            pass
+
+        request = {
+            "type": "RESTRequest",
+            "request_id": str(uuid.uuid4()),
+            "method": method,
+            "uri": uri,
+        }
+
+        for key, value in kwargs.items():
+            request[key] = value
+
+        request_logger.info("OUT: %s %s - %s", method, uri, request)
+        await self.send_json(request)
+
+        return_object = {"result": ""}
+        # if wait_for_response:
+        #    return_object['event'] = asyncio.Event()
+
+        # self.requests[uuidstr] = rtnobj
+        # await self.websocket.send(msg.encode('utf-8'), text=True)
+        # if wait_for_response:
+        #    await rtnobj['event'].wait()
+        # del self.requests[uuidstr]
+        # resp = rtnobj['result']
+        # self.log(INFO, f"RESTResponse: {method} {uri} {resp['status_code']} {resp['reason_phrase']}")
+        # if callback is not None:
+        #    return callback(self.websocket, uuidstr, req, rtnobj['result'])
+        # return rtnobj['result']
+
+    async def _say(self, text: str, npc: models.NPC | None = None) -> None:
+        """Read text to the player."""
+        if npc is None and self.callLog.NPC is None:
+            request_logger.warning("Say with unknown NPC!")
+            # self.outbound.append({"say": {"text": text}})
+            return
+        if npc is None:
+            npc = self.callLog.NPC
+
+        recording, created = await self.speech_get_or_create(npc=npc, text=text)
+        print(f"fae: recording.recording={recording.recording}")
+
+        if recording.recording is None:
+            request_logger.warning("Missing text for %s: %s", npc.name, text)
+            # test beepboop
+            await self._send("POST", f"channels/{self.callLog.call_id}/dtmf", dtmf="012345678ABCD#*")
+            # TODO implement TTS
+            print(f"TODO say: {text}")
+        #    self.outbound.append({"say": {"text": text}})
+        else:
+            await self._send("POST", f"channels/{self.callLog.call_id}/play", media=reverse("speech", kwargs={"recording_id": recording.id}))
+
+    async def _gather(
+        self,
+        text: str,
+        digits: int | None = None,
+        min_digits: int | None = None,
+        max_digits: int | None = None,
+    ) -> [str, str]:
+        """Gather DTMF digits from the player."""
+
+        await self._say(text)
+
+        # TODO implement
+        return ("", "not implemented TODO.")
+
+    async def _hangup(self) -> None:
+        #TODO
+        # await self._send("DELETE", f"channels/{self.callLog.call_id}", reason_code=16)
+        pass
+
+# vim: tw=0 ts=4 sw=4

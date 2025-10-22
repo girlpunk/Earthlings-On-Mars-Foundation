@@ -1,6 +1,7 @@
 """Websocket version of URLs."""
 
-from calls.consumers import AsteriskCallConsumer, JambonzCallConsumer
+from calls.consumers import JambonzCallConsumer
+from calls.consumers_asterisk import AsteriskCallConsumer
 from django.urls import path
 
 websocket_urlpatterns = [
