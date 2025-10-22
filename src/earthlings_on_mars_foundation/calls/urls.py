@@ -10,6 +10,6 @@ urlpatterns = [
     # path("identify/", csrf_exempt(views.identified), name="identified"),
     # path("code/<recruit_mission_id>/", csrf_exempt(views.code), name="code"),
     # path("status/", csrf_exempt(views.status), name="status"),
-    path("speech/<recording_id>/", views.speech, name="speech"),
+    path("speech/<recording_id>.alaw", views.speech, name="speech"),
     path("admin/", custom_admin_site.urls),
 ]
