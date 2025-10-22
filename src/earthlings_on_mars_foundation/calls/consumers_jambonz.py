@@ -48,6 +48,8 @@ class JambonzCallConsumer(CallConsumer):
         """Decode message data from JSON, and send to the relevent handler."""
         request_logger.info("IN: %s", data)
 
+        # TODO call self.call_hungup("reason...") when that event happens
+
         if data["type"] == "session:new":
             self.active_message = data["msgid"]
             await self._update_log(data)
