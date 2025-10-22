@@ -76,6 +76,55 @@
             };
           };
 
+        pypi_iterators = _:
+          pkgs.python313Packages.buildPythonPackage rec {
+            pname = "iterators";
+            format = "pyproject";
+            version = "0.2.0";
+
+            nativeBuildInputs = with pkgs.python313Packages; [
+              setuptools
+              setuptools-scm
+            ];
+
+            src = pkgs.fetchPypi {
+              pname = "iterators";
+              inherit version;
+              hash = "sha256-6ZJ6HqHvCBgw/RUS85FoV8Nr1LNycoGabNKdD0RDG5c=";
+            };
+          };
+
+        cartesia = _:
+          pkgs.python313Packages.buildPythonPackage rec {
+            pname = "cartesia";
+            format = "pyproject";
+            version = "2.0.9";
+
+            nativeBuildInputs = with pkgs.python313Packages; [
+              poetry-core
+              setuptools
+              setuptools-scm
+            ];
+
+            propagatedBuildInputs = with pkgs.python313Packages; [
+              aiohttp
+              audioop-lts
+              httpx
+              httpx-sse
+              (pkgs.callPackage pypi_iterators {})
+              pydantic
+              pydantic-core
+              pydub
+              websockets
+            ];
+
+            src = pkgs.fetchPypi {
+              pname = "cartesia";
+              inherit version;
+              hash = "sha256-6LdXsCoO8ij2EDF950qiKn8EfReFcVJ+zAaUItfBRjk=";
+            };
+          };
+
         app = pkgs.python313Packages.buildPythonApplication rec {
           name = "earthlings_on_mars_foundation";
           src = ./.;
@@ -106,6 +155,7 @@
             django-health-check
             lupa
             pillow
+            (pkgs.callPackage cartesia {})
             (pkgs.callPackage django-editor-widgets {})
             (pkgs.callPackage django-no-queryset-admin-actions {})
             psycopg2

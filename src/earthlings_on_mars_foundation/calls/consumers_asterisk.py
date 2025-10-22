@@ -8,6 +8,7 @@ import uuid
 from asgiref.sync import sync_to_async
 from calls import models
 from calls.consumers import CallConsumer, InvalidMessageError
+from calls.tts import Tts
 from django.db.models import Count, Exists, F, OuterRef, Q
 from django.urls import reverse
 
@@ -15,6 +16,10 @@ request_logger = logging.getLogger("eomf.calls.consumer.asterisk")
 
 
 class AsteriskCallConsumer(CallConsumer):
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.tts = Tts()
 
     async def connect(self) -> None:
         await super().connect()
@@ -82,7 +87,6 @@ class AsteriskCallConsumer(CallConsumer):
             self.call_hungup(mtype)
             data["channel"]["state"] = "Down"
             await self._update_log(data)
-            # TODO: Stop thread
         elif mtype == "ChannelDtmfReceived":
             digit = data["digit"]
             print(f"TONE digit: {digit}")
@@ -90,6 +94,10 @@ class AsteriskCallConsumer(CallConsumer):
         elif mtype == "RESTResponse":
             if data["status_code"] < 200 or data["status_code"] >= 300:
                 request_logger.error(f"Failed REST request: {data}")
+        elif mtype == "PlaybackStarted":
+            pass
+        elif mtype == "PlaybackFinished":
+            pass
         else:
             raise InvalidMessageError(mtype, data)
 
@@ -132,18 +140,17 @@ class AsteriskCallConsumer(CallConsumer):
         if npc is None:
             npc = self.callLog.NPC
 
-        recording, created = await self.speech_get_or_create(npc=npc, text=text)
+        speech, created = await self.speech_get_or_create(npc=npc, text=text)
 
-        if not recording.recording:
-            request_logger.warning("Missing text for %s: %s", npc.name, text)
-            # test beepboop
-            await self._send("POST", f"channels/{self.callLog.call_id}/dtmf", dtmf="012345678ABCD#*")
-            # TODO implement TTS
-            print(f"TODO say: {text}")
-            await asyncio.sleep(10)
-        #    self.outbound.append({"say": {"text": text}})
-        else:
-            await self._send("POST", f"channels/{self.callLog.call_id}/play", media=reverse("speech", kwargs={"recording_id": recording.id}))
+        if not speech.recording:
+            request_logger.warning("Generating TTS for missing text for %s: %s", npc.name, text)
+            audio_bytes = await self.tts.audio_bytes(text)
+            await self.speech_store_recording(speech, audio_bytes, True)
+
+        # TODO properly determin esternal host etc
+        await self._send("POST", f"channels/{self.callLog.call_id}/play", media="sound:http://127.0.0.1:8000" + reverse("speech", kwargs={"recording_id": speech.id}))
+        # TODO wait for event
+        await asyncio.sleep(15)
 
     async def _gather(
         self,
