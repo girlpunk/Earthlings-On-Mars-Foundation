@@ -22,7 +22,7 @@ pip install earthlings-on-mars-foundation
 nix develop --command $SHELL
 cd src/earthlings_on_mars_foundation
 ./manage.py migrate
-DEBUG=true ./manage.py runserver
+DEBUG=true ./manage.py runserver 0.0.0.0:8000
 ```
 
 ## License
