@@ -290,7 +290,14 @@ LOGGING = {
             "formatter": "verbose",
         },
     },
-    "root": {"handlers": ["console"]},
+    "root": {
+        "handlers": ["console"]
+    },
+    "loggers": {
+        "eomf": {
+            "level": "INFO"
+        }
+    }
 }
 
 logging.config.dictConfig(LOGGING)
