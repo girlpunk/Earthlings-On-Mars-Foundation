@@ -147,8 +147,12 @@ class AsteriskCallConsumer(CallConsumer):
             audio_bytes = await self.tts.audio_bytes(text)
             await self.speech_store_recording(speech, audio_bytes, True)
 
-        # TODO properly determin esternal host etc
-        await self._send("POST", f"channels/{self.callLog.call_id}/play", media="sound:http://127.0.0.1:8000" + reverse("speech", kwargs={"recording_id": speech.id}))
+        headers = self.scope['headers']
+        host = next(iter([h[1].decode('ascii') for h in headers if h[0] == b'host']))
+        # TODO detect http/https
+        media = "sound:http://%s%s" % (host, reverse("speech", kwargs={"recording_id": speech.id}))
+        await self._send("POST", f"channels/{self.callLog.call_id}/play", media=media)
+
         # TODO wait for event
         await asyncio.sleep(15)
 
