@@ -15,9 +15,10 @@ request_logger = logging.getLogger("eomf.calls.consumer.asterisk")
 
 
 class AsteriskCallConsumer(CallConsumer):
+
     async def connect(self) -> None:
+        await super().connect()
         request_logger.info("Asterisk connect()")
-        super().connect()
         await self.accept()
 
     @sync_to_async
@@ -69,17 +70,16 @@ class AsteriskCallConsumer(CallConsumer):
         elif mtype == "ChannelVarset":
             pass
         elif mtype == "ChannelHangupRequest":
-            request_logger.info(f"Hangup {data['cause']}")
+            self.call_hungup(mtype)
             data["channel"]["state"] = "Down"
             await self._update_log(data)
-            # TODO: Stop thread
         elif mtype == "ChannelDialplan" or mtype == "ChannelUserevent" or mtype == "StasisEnd":
             # TODO: Figure out what this is for
             await self._update_log(data)
         elif mtype == "DeviceStateChanged":
             pass
         elif mtype == "ChannelDestroyed":
-            request_logger.info(f"Hangup {data['cause']}")
+            self.call_hungup(mtype)
             data["channel"]["state"] = "Down"
             await self._update_log(data)
             # TODO: Stop thread
@@ -87,6 +87,9 @@ class AsteriskCallConsumer(CallConsumer):
             digit = data["digit"]
             print(f"TONE digit: {digit}")
             # TODO implement gathering digits
+        elif mtype == "RESTResponse":
+            if data["status_code"] < 200 or data["status_code"] >= 300:
+                request_logger.error(f"Failed REST request: {data}")
         else:
             raise InvalidMessageError(mtype, data)
 
@@ -99,10 +102,8 @@ class AsteriskCallConsumer(CallConsumer):
             "request_id": str(uuid.uuid4()),
             "method": method,
             "uri": uri,
+            "query_strings": [{"name": name, "value": value} for (name, value) in kwargs.items()],
         }
-
-        for key, value in kwargs.items():
-            request[key] = value
 
         request_logger.info("OUT: %s %s - %s", method, uri, request)
         await self.send_json(request)
@@ -132,14 +133,14 @@ class AsteriskCallConsumer(CallConsumer):
             npc = self.callLog.NPC
 
         recording, created = await self.speech_get_or_create(npc=npc, text=text)
-        print(f"fae: recording.recording={recording.recording}")
 
-        if recording.recording is None:
+        if not recording.recording:
             request_logger.warning("Missing text for %s: %s", npc.name, text)
             # test beepboop
             await self._send("POST", f"channels/{self.callLog.call_id}/dtmf", dtmf="012345678ABCD#*")
             # TODO implement TTS
             print(f"TODO say: {text}")
+            await asyncio.sleep(10)
         #    self.outbound.append({"say": {"text": text}})
         else:
             await self._send("POST", f"channels/{self.callLog.call_id}/play", media=reverse("speech", kwargs={"recording_id": recording.id}))
@@ -159,9 +160,9 @@ class AsteriskCallConsumer(CallConsumer):
         return ("", "not implemented TODO.")
 
     async def _hangup(self) -> None:
-        #TODO
-        # await self._send("DELETE", f"channels/{self.callLog.call_id}", reason_code=16)
-        pass
+        # https://docs.asterisk.org/Configuration/Miscellaneous/Hangup-Cause-Mappings/#asterisk-hangup-cause-code-mappings
+        # 16 = Normal Clearing
+        await self._send("DELETE", f"channels/{self.callLog.call_id}", reason_code=16)
 
 
 # vim: tw=0 ts=4 sw=4

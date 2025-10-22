@@ -38,16 +38,25 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
         self.active_message = None
         self.ack_done = False
         self.action_thread = None
+        self.call_connected = False
 
     async def connect(self) -> None:
         """Handle a new incoming connection."""
-        request_logger.info("New connect!")
+        request_logger.info("Call connect()")
+        self.call_connected = True
 
     async def disconnect(self, _: str) -> None:
         """Handle a disconnect."""
+        self.call_hungup("websocket disconnct()")
         if self.callLog is not None:
             self.callLog.completed = True
             await self.callLog.asave()
+
+    def call_hungup(self, reason: str) -> None:
+        """Call when call is over and need to teardown, may be called multiple times."""
+        self.call_connected = False
+        # TODO: Stop thread
+        request_logger.info(f"Call hungup: {reason}")
 
     async def receive(self, text_data: str) -> None:
         """Handle an incoming message."""
@@ -58,7 +67,7 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
         """Allow a player to authenticate themselves."""
         recruit = None
 
-        while recruit is None:
+        while recruit is None and self.call_connected:
             recruit_id, reason = await self._gather(
                 "Please enter your recruit number to connect your call. If you've lost your multipass and need a replacement recruit number, press 0",
                 min_digits=1,
@@ -87,6 +96,9 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
                     # Verify the recruit number
                     await self._say("Sorry, that number was not recognised.")
                     continue
+
+        if not recruit:
+            return None
 
         self.callLog.recruit = recruit
         await self._say("Caller verified!")
@@ -264,10 +276,16 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
         """Prepare new call logic."""
         try:
             recruit = await self._authenticate()
+            if not self.call_connected:
+                return
+            if not recruit:
+                await self._say("Unable to identify caller.")
+                await self._hangup()
+                return
 
             if self.callLog.NPC is None:
                 request_logger.warning("NPC is none")
-                await self._say("Unable to identify what NPC you are calling")
+                await self._say("Unable to identify which NPC you are calling.")
                 self._send()
                 return
 
@@ -306,7 +324,8 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
                 await self.callLog.asave()
 
             request_logger.exception("Error during call processing")
-        request_logger.info("END THREAD.")
+        finally:
+            request_logger.info("END THREAD.")
 
     async def _find_new_mission(self, recruit: models.Recruit) -> None:
         """Find a new mission for the player to start."""
