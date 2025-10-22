@@ -312,3 +312,4 @@ class Speech(models.Model):
     NPC = models.ForeignKey(NPC, on_delete=models.CASCADE, null=True, blank=True)
     text = models.TextField()
     recording = models.FileField()
+    tts = models.BooleanField(default=True)

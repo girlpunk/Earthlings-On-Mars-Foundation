@@ -2,6 +2,7 @@
 
 import asyncio
 import datetime
+import io
 import json
 import logging
 import threading
@@ -406,6 +407,14 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
             NPC=npc,
             text=text,
         )
+
+    @sync_to_async
+    def speech_store_recording(self, speech: models.Speech, data: bytes, is_tts: bool):
+        speech.tts = is_tts
+        speech.recording.save(
+                name=f"speech-{speech.id}",
+                content=io.BytesIO(data),
+                save=True)
 
 
 # vim: tw=0 ts=4 sw=4
