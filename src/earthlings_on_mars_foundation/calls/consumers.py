@@ -234,14 +234,6 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
 
         await self._say(recruit_mission.mission.completion_text)
 
-    @sync_to_async
-    def speech_get_or_create(self, npc: models.NPC, text: str):
-        # TODO handle NPC being null, fall back to defalt for error msgs etc
-        return models.Speech.objects.get_or_create(
-            NPC=npc,
-            text=text,
-        )
-
     async def _send(self) -> None:
         """Send a command to Jambonz."""
         if self.ack_done:
@@ -388,6 +380,13 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
         # TODO(Me): Implement https://github.com/girlpunk/Earthlings-On-Mars-Foundation/issues/3
         raise NotImplementedError
 
+    @sync_to_async
+    def speech_get_or_create(self, npc: models.NPC, text: str):
+        # TODO handle NPC being null, fall back to defalt for error msgs etc
+        return models.Speech.objects.get_or_create(
+            NPC=npc,
+            text=text,
+        )
 
 
 # vim: tw=0 ts=4 sw=4
