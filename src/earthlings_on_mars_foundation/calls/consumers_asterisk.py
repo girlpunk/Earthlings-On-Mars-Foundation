@@ -3,6 +3,7 @@ import contextlib
 import datetime
 import json
 import logging
+import time
 import uuid
 
 from asgiref.sync import sync_to_async
@@ -15,11 +16,30 @@ from django.urls import reverse
 request_logger = logging.getLogger("eomf.calls.consumer.asterisk")
 
 
+class MyEvent:
+    def __init__(self) -> None:
+        self.event = asyncio.Event()
+        self.clear()
+
+    def set(self):
+        self.loop.call_soon_threadsafe(self.event.set)
+
+    def clear(self):
+        self.loop = asyncio.get_running_loop()
+        self.event.clear()
+
+    async def wait(self):
+        await self.event.wait()
+
+
 class AsteriskCallConsumer(CallConsumer):
 
     def __init__(self) -> None:
         super().__init__()
         self.tts = Tts()
+        self.playback_finished = MyEvent()
+        self.gathered_digits = ""
+        self.last_digit_time = None
 
     async def connect(self) -> None:
         await super().connect()
@@ -89,15 +109,17 @@ class AsteriskCallConsumer(CallConsumer):
             await self._update_log(data)
         elif mtype == "ChannelDtmfReceived":
             digit = data["digit"]
-            print(f"TONE digit: {digit}")
-            # TODO implement gathering digits
+            self.gathered_digits += digit
+            request_logger.info("TONE digit: %s   [%s]", digit, self.gathered_digits)
+            self.last_digit_time = time.monotonic()
         elif mtype == "RESTResponse":
             if data["status_code"] < 200 or data["status_code"] >= 300:
                 request_logger.error(f"Failed REST request: {data}")
         elif mtype == "PlaybackStarted":
             pass
         elif mtype == "PlaybackFinished":
-            pass
+            asyncio.get_running_loop().call_soon_threadsafe(self.playback_finished.set)
+            request_logger.info("Playback finished.")
         else:
             raise InvalidMessageError(mtype, data)
 
@@ -151,10 +173,12 @@ class AsteriskCallConsumer(CallConsumer):
         host = next(iter([h[1].decode('ascii') for h in headers if h[0] == b'host']))
         # TODO detect http/https
         media = "sound:http://%s%s" % (host, reverse("speech", kwargs={"recording_id": speech.id}))
-        await self._send("POST", f"channels/{self.callLog.call_id}/play", media=media)
 
-        # TODO wait for event
-        await asyncio.sleep(15)
+        self.playback_finished.clear()
+        await self._send("POST", f"channels/{self.callLog.call_id}/play", media=media)
+        request_logger.info("Waiting for playback: \"%s\"", text)
+        await self.playback_finished.wait()
+        request_logger.info("Done waiting for playback.")
 
     async def _gather(
         self,
@@ -165,10 +189,34 @@ class AsteriskCallConsumer(CallConsumer):
     ) -> [str, str]:
         """Gather DTMF digits from the player."""
 
+        # TODO restructure to exit early if there are enough digits?
+        self.gathered_digits = ""
         await self._say(text)
 
-        # TODO implement
-        return ("", "not implemented TODO.")
+        wanted_min = 1
+        wanted_max = 1
+        if digits is not None:
+            wanted_min = digits
+            wanted_max = digits
+        if min_digits is not None:
+            wanted_min = min_digits
+        if max_digits is not None:
+            wanted_max = max_digits
+
+        # TODO make reasons impl agnostic.
+        # TODO make digit timeouts same between impls.
+
+        request_logger.info("Waiting for %s to %s digits...", wanted_min, wanted_max)
+        start = time.monotonic()
+        while len(self.gathered_digits) < wanted_max:
+            if len(self.gathered_digits) >= wanted_min and self.last_digit_time is not None and time.monotonic() - self.last_digit_time > 5:
+                break
+            elif time.monotonic() - start > 20:
+                return ("", "timeout")
+            await asyncio.sleep(1)
+
+        request_logger.info("Got digits: %s", self.gathered_digits)
+        return (self.gathered_digits, "dtmfDetected")
 
     async def _hangup(self) -> None:
         # https://docs.asterisk.org/Configuration/Miscellaneous/Hangup-Cause-Mappings/#asterisk-hangup-cause-code-mappings
