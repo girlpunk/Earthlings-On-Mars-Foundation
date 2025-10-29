@@ -4,6 +4,7 @@ import datetime
 import json
 import logging
 import time
+import threading
 import uuid
 
 from asgiref.sync import sync_to_async
@@ -13,23 +14,8 @@ from calls.tts import Tts
 from django.db.models import Count, Exists, F, OuterRef, Q
 from django.urls import reverse
 
+# TODO prefix with some sort of call identifier.
 request_logger = logging.getLogger("eomf.calls.consumer.asterisk")
-
-
-class MyEvent:
-    def __init__(self) -> None:
-        self.event = asyncio.Event()
-        self.clear()
-
-    def set(self):
-        self.loop.call_soon_threadsafe(self.event.set)
-
-    def clear(self):
-        self.loop = asyncio.get_running_loop()
-        self.event.clear()
-
-    async def wait(self):
-        await self.event.wait()
 
 
 class AsteriskCallConsumer(CallConsumer):
@@ -37,7 +23,7 @@ class AsteriskCallConsumer(CallConsumer):
     def __init__(self) -> None:
         super().__init__()
         self.tts = Tts()
-        self.playback_finished = MyEvent()
+        self.playback_trackers = {}
         self.gathered_digits = ""
         self.last_digit_time = None
 
@@ -118,8 +104,13 @@ class AsteriskCallConsumer(CallConsumer):
         elif mtype == "PlaybackStarted":
             pass
         elif mtype == "PlaybackFinished":
-            asyncio.get_running_loop().call_soon_threadsafe(self.playback_finished.set)
-            request_logger.info("Playback finished.")
+            playback_id = data["playback"]["id"]
+            tracker = self.playback_trackers.get(playback_id)
+            if tracker:
+                tracker.set()
+                request_logger.info("Playback finished: %s", playback_id)
+            else:
+                request_logger.warning("Untracked playback finished: %s", playback_id)
         else:
             raise InvalidMessageError(mtype, data)
 
@@ -174,11 +165,26 @@ class AsteriskCallConsumer(CallConsumer):
         # TODO detect http/https
         media = "sound:http://%s%s" % (host, reverse("speech", kwargs={"recording_id": speech.id}))
 
-        self.playback_finished.clear()
-        await self._send("POST", f"channels/{self.callLog.call_id}/play", media=media)
-        request_logger.info("Waiting for playback: \"%s\"", text)
-        await self.playback_finished.wait()
-        request_logger.info("Done waiting for playback.")
+        playback_id = str(uuid.uuid4())
+        tracker = threading.Event()
+        self.playback_trackers[playback_id] = tracker
+
+        await self._send("POST", f"channels/{self.callLog.call_id}/play", media=media, playbackId=playback_id)
+        request_logger.info("Waiting for playback %s: \"%s\"", playback_id, text)
+
+        cancelled = False
+        while not tracker.is_set():
+            try:
+                await asyncio.sleep(1)
+            except asyncio.CancelledError:
+                cancelled = True
+                break
+
+        if cancelled:
+            request_logger.info("Playback %s cancelled.", playback_id)
+            await self._send("DELETE", f"playbacks/{playback_id}")
+        else:
+            request_logger.info("Done waiting for playback %s.", playback_id)
 
     async def _gather(
         self,
@@ -189,9 +195,8 @@ class AsteriskCallConsumer(CallConsumer):
     ) -> [str, str]:
         """Gather DTMF digits from the player."""
 
-        # TODO restructure to exit early if there are enough digits?
-        self.gathered_digits = ""
-        await self._say(text)
+        # TODO make returned reasons impl agnostic.
+        # TODO make digit timeouts same between impls.
 
         wanted_min = 1
         wanted_max = 1
@@ -202,20 +207,27 @@ class AsteriskCallConsumer(CallConsumer):
             wanted_min = min_digits
         if max_digits is not None:
             wanted_max = max_digits
-
-        # TODO make reasons impl agnostic.
-        # TODO make digit timeouts same between impls.
-
         request_logger.info("Waiting for %s to %s digits...", wanted_min, wanted_max)
-        start = time.monotonic()
+
+        self.gathered_digits = ""
+        say_task = asyncio.create_task(self._say(text))
+
+        say_end_time = None
+        def on_say_done(_):
+            nonlocal say_end_time
+            say_end_time = time.monotonic()
+        say_task.add_done_callback(on_say_done)
+
         while len(self.gathered_digits) < wanted_max:
             if len(self.gathered_digits) >= wanted_min and self.last_digit_time is not None and time.monotonic() - self.last_digit_time > 5:
                 break
-            elif time.monotonic() - start > 20:
+            elif say_end_time is not None and time.monotonic() - say_end_time > 20:
+                say_task.cancel()
                 return ("", "timeout")
             await asyncio.sleep(1)
 
-        request_logger.info("Got digits: %s", self.gathered_digits)
+        say_task.cancel()
+        request_logger.info("Returning gathered digits: %s", self.gathered_digits)
         return (self.gathered_digits, "dtmfDetected")
 
     async def _hangup(self) -> None:
