@@ -35,7 +35,7 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
         super().__init__()
         self.incomingMessage = None
         self.newMessage = threading.Event()
-        self.callLog = None
+        self.callLog: models.CallLog | None = None
         self.active_message = None
         self.ack_done = False
         self.action_thread = None

@@ -129,7 +129,7 @@ class AsteriskCallConsumer(CallConsumer):
         request_logger.info("OUT: %s %s - %s", method, uri, request)
         await self.send_json(request)
 
-        return_object = {"result": ""}
+        # return_object = {"result": ""}
         # if wait_for_response:
         #    return_object['event'] = asyncio.Event()
 

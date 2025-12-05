@@ -115,7 +115,7 @@ class SessionLogMiddleware(MiddlewareMixin):
             try:
                 return text.decode("utf-8").replace("\\n", "").replace("\\t", "").replace("\\r", "")
             except Exception:
-                request_logger.exception()
+                request_logger.exception(traceback.format_exc())
         return str(text)
 
     def get_client_ip(self, request: HttpResponse) -> str:

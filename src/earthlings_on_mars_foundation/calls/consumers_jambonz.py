@@ -12,7 +12,7 @@ request_logger = logging.getLogger("eomf.calls.consumer.jambonz")
 
 class JambonzCallConsumer(CallConsumer):
     async def connect(self) -> None:
-        self.outbound = []
+        self.outbound: List[dict[str, Any]] = []
         super().connect()
         await self.accept("ws.jambonz.org")
 
@@ -44,7 +44,7 @@ class JambonzCallConsumer(CallConsumer):
 
         await self.callLog.asave()
 
-    async def receive_json(self, data: str) -> None:
+    async def receive_json(self, data: dict[str, Any]) -> None:
         """Decode message data from JSON, and send to the relevent handler."""
         request_logger.info("IN: %s", data)
 

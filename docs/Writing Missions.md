@@ -65,26 +65,26 @@ Some general parameters apply to all missions
 
 Player to call back from this location ID to complete the mission.
 
-| Field              | Description |
-| ---                | --- |
-| `callBackFrom`     | Location ID to call from. |
+| Field | Description |
+| --- | --- |
+| `callBackFrom` | Location ID to call from. |
 
 #### Call Another
 
 Player to call another NPC to complete the mission.
 
-| Field              | Description |
-| ---                | --- |
-| `callAnother`      | ID of the NPC to call. |
+| Field | Description |
+| --- | --- |
+| `callAnother` | ID of the NPC to call. |
 
 #### Code
 
 Player to enter a pre-defined code to complete the mission.
 
-| Field              | Description |
-| ---                | --- |
-| `code`             | Code the user should enter. Ensure quoted if the code contains leading zeros.|^
-| `incorrectText`    | Text read to the user after entering an incorrect code. |
+| Field | Description |
+| --- | --- |
+| `code` | Code the user should enter. Ensure quoted if the code contains leading zeros. |
+| `incorrectText` | Text read to the user after entering an incorrect code. |
 
 #### Count
 

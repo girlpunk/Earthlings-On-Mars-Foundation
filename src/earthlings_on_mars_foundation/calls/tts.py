@@ -7,7 +7,7 @@ class Tts:
     def __init__(self) -> None:
         api_key = os.getenv("CARTESIA_API_KEY")
         if not api_key:
-            raise Error("Missing cartesia API key envvar CARTESIA_API_KEY")
+            raise Exception("Missing cartesia API key envvar CARTESIA_API_KEY")
         self.client = AsyncCartesia(api_key=api_key)
 
     async def audio_bytes(self, text: str):

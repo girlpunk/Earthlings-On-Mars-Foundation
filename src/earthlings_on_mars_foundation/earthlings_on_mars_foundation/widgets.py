@@ -22,7 +22,7 @@ class LuaEditor(forms.Textarea):
         css: ClassVar[dict[str, tuple[str]]] = {
             "all": ("https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.min.css",),
         }
-        js: ClassVar[tuple[str]] = (
+        js: ClassVar[tuple[str, str, str]] = (
             "https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.min.js",
             "https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/mode/lua/lua.min.js",
             "/static/codemirror-6.65/init.js",

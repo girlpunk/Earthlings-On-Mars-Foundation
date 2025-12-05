@@ -13,7 +13,7 @@ DISABLE_LINTERS:
   - "SPELL_CSPELL"
   - "SPELL_LYCHEE"
   - "HTML_HTMLHINT"
-
+  - "JAVASCRIPT_STANDARD"
 PRE_COMMANDS:
   - command: python3 -m pip install hatch
     venv: pylint
