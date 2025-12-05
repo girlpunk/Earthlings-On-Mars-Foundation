@@ -11,8 +11,6 @@ from django.db import models
 class Recruit(models.Model):
     """Player."""
 
-    # TODO(Me): Reputations https://github.com/girlpunk/Earthlings-On-Mars-Foundation/issues/1
-    score = models.IntegerField(default=0)
     missions = models.ManyToManyField("Mission", through="RecruitMission")
     NPCs = models.ManyToManyField("NPC", through="RecruitNPC")
 
@@ -50,6 +48,9 @@ class RecruitNPC(models.Model):
     recruit = models.ForeignKey(Recruit, on_delete=models.CASCADE)
     NPC = models.ForeignKey(NPC, on_delete=models.CASCADE)
     contacted = models.BooleanField(default=False)
+
+    # TODO(Me): Reputations https://github.com/girlpunk/Earthlings-On-Mars-Foundation/issues/1
+    score = models.IntegerField(default=0)
 
 
 class MissionTypes(IntEnum):

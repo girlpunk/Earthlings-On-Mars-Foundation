@@ -231,8 +231,13 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
         recruit_mission.finished = datetime.datetime.now(tz=datetime.UTC)
         await recruit_mission.asave()
 
-        recruit_mission.recruit.score -= recruit_mission.mission.points
-        await recruit_mission.recruit.asave()
+        recruit_npc = await models.RecruitNPC.objects.aget(
+            recruit=recruit_mission.recruit,
+            NPC=recruit_mission.mission.NPC,
+        )
+
+        recruit_npc.score -= recruit_mission.mission.points
+        await recruit_npc.asave()
 
         await self._say(recruit_mission.mission.cancel_text)
 
@@ -242,8 +247,13 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
         recruit_mission.finished = datetime.datetime.now(tz=datetime.UTC)
         await recruit_mission.asave()
 
-        recruit_mission.recruit.score += recruit_mission.mission.points
-        await recruit_mission.recruit.asave()
+        recruit_npc = await models.RecruitNPC.objects.aget(
+            recruit=recruit_mission.recruit,
+            NPC=recruit_mission.mission.NPC,
+        )
+
+        recruit_npc.score += recruit_mission.missionn.points
+        await recruit_npc.asave()
 
         await self._say(recruit_mission.mission.completion_text)
 
