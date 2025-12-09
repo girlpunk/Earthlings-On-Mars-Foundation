@@ -69,9 +69,9 @@ class SessionLogMiddleware(MiddlewareMixin):
                     response_data = self.clean_text(response.content)
 
         log_data = {
-            #'HEADERS': headers,
+            # 'HEADERS': headers,
             "METHOD": request.method,
-            #'USER': {
+            # 'USER': {
             #    'ip_address': self.get_client_ip(request)
             # },
             "URL": request.build_absolute_uri(),

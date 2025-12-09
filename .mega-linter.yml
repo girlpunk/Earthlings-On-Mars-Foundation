@@ -15,7 +15,7 @@ DISABLE_LINTERS:
   - "HTML_HTMLHINT"
   - "JAVASCRIPT_STANDARD"
 PRE_COMMANDS:
-  - command: python3 -m pip install hatch
+  - command: python3 -m pip install hatch django
     venv: pylint
     continue_if_failed: false
 

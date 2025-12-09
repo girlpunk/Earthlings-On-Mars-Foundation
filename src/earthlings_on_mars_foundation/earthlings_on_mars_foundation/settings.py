@@ -81,7 +81,7 @@ INSTALLED_APPS = [
     #    'health_check.contrib.celery_ping',         # requires celery
     #    'health_check.contrib.rabbitmq',            # requires RabbitMQ broker
     #    'health_check.contrib.redis',               # requires Redis broker
-    #'health_check.contrib.db_heartbeat',
+    # 'health_check.contrib.db_heartbeat',
     "django_no_queryset_admin_actions",
 ]
 
@@ -147,7 +147,7 @@ X_FRAME_OPTIONS = "SAMEORIGIN"
 #    'localhost',
 #    '127.0.0.1',
 #    "emf.home.foxocube.xyz"
-## wss://emf.home.foxocube.xyz/ws/call/
+# wss://emf.home.foxocube.xyz/ws/call/
 # ]
 
 ALLOWED_HOSTS = __get_list("ALLOWED_HOSTS", ["*"])

@@ -1,10 +1,9 @@
 import contextlib
-import json
 import logging
+from typing import Any, List
 
 from calls import models
 from calls.consumers import CallConsumer, InvalidMessageError
-from django.db.models import Count, Exists, F, OuterRef, Q
 from django.urls import reverse
 
 request_logger = logging.getLogger("eomf.calls.consumer.jambonz")

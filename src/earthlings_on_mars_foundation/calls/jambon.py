@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 
-def gather(text: str, callback: str, digits: int | None = None, min_digits: int | None = None, max_digits: int | None = None) -> dict[str, Union[str, dict[str, str]]:
+def gather(text: str, callback: str, digits: int | None = None, min_digits: int | None = None, max_digits: int | None = None) -> dict[str, Union[str, dict[str, str]]]:
     """Get DTMF digits from the player."""
     data = {
         "verb": "gather",
