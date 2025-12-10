@@ -204,7 +204,7 @@ def _parse_db_settings() -> dict:
         databases["sqlite"] = databases["default"].copy()
 
         databases["default"] = {
-            "HOST": os.getenv("DBHOST"),
+            "HOST": os.getenv("DBHOST", "localhost"),
             "NAME": os.getenv("DBNAME", "emf"),
             "USER": os.getenv("DBUSER", "emf"),
             "PASSWORD": os.getenv("DBPASS", "emf"),
@@ -225,7 +225,7 @@ def _parse_db_settings() -> dict:
                 {
                     "pool": {
                         "min_size": 1,
-                        "max_size": int(os.getenv("DB_POOLSIZE")),
+                        "max_size": int(os.getenv("DB_POOLSIZE", ""2)),
                     },
                 },
             )

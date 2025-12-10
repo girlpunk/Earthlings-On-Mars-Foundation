@@ -1,11 +1,12 @@
 """Jambonz helper functions."""
 
 from __future__ import annotations
+from typing import Union, Any
 
 
 def gather(text: str, callback: str, digits: int | None = None, min_digits: int | None = None, max_digits: int | None = None) -> dict[str, Union[str, dict[str, str]]]:
     """Get DTMF digits from the player."""
-    data = {
+    data: dict[str, Any] = {
         "verb": "gather",
         "actionHook": callback,
         "input": ["digits"],  # Can also include "speech"

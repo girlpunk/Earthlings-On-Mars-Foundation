@@ -1,30 +1,19 @@
----
 IGNORE_GITIGNORED_FILES: true
 PRINT_ALPACA: false
-
 #FILTER_REGEX_EXCLUDE:
 #  - "src/earthlings_on_mars_foundation/static/tinymce"
 #  - "src/earthlings_on_mars_foundation/static_cdn/tinymce"
 #  - "src/earthlings_on_mars_foundation/static_root"
 #  - "src/earthlings_on_mars_foundation/static/monaco"
 #  - "src/earthlings_on_mars_foundation/static_cdn/monaco"
-
 DISABLE_LINTERS:
   - "SPELL_CSPELL"
   - "SPELL_LYCHEE"
   - "HTML_HTMLHINT"
   - "JAVASCRIPT_STANDARD"
-PRE_COMMANDS:
-  - command: python3 -m pip install hatch django
-    venv: pylint
-    continue_if_failed: false
-
-  - command: python3 -m hatch run true
-    venv: pylint
-    continue_if_failed: false
-
 
 PYTHON_PYLINT_PRE_COMMANDS:
-  - command: "python3 -m pip install hatch"
-  - command: "python3 -m hatch run true"
   - command: "python3 -m pip install click django requests channels daphne lupa django-editor-widgets"
+
+PYTHON_PYRIGHT_PRE_COMMANDS:
+  - command: "python3 -m pip install click django requests channels daphne lupa django-editor-widgets types-PyYAML types-requests"

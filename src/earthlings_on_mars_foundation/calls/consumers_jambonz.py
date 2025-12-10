@@ -10,12 +10,16 @@ request_logger = logging.getLogger("eomf.calls.consumer.jambonz")
 
 
 class JambonzCallConsumer(CallConsumer):
+    def __init__(self) -> None:
+        self.callLog: models.CallLog | None = None
+        super().__init__()
+
     async def connect(self) -> None:
         self.outbound: List[dict[str, Any]] = []
         super().connect()
         await self.accept("ws.jambonz.org")
 
-    async def _update_log(self, message: str) -> None:
+    async def _update_log(self, message: dict[str, Any]) -> None:
         """Update the log for an in-progress call."""
         if self.callLog is None:
             self.callLog, created = await models.CallLog.objects.aget_or_create(
@@ -99,7 +103,7 @@ class JambonzCallConsumer(CallConsumer):
         digits: int | None = None,
         min_digits: int | None = None,
         max_digits: int | None = None,
-    ) -> [str, str]:
+    ) -> tuple[str | None, str]:
         """Gather DTMF digits from the player."""
         command = {
             "input": ["digits"],  # Can also include "speech"
