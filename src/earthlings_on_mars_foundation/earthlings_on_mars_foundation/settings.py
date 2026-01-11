@@ -225,7 +225,7 @@ def _parse_db_settings() -> dict:
                 {
                     "pool": {
                         "min_size": 1,
-                        "max_size": int(os.getenv("DB_POOLSIZE", ""2)),
+                        "max_size": int(os.getenv("DB_POOLSIZE", "2")),
                     },
                 },
             )
