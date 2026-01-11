@@ -106,7 +106,7 @@
               setuptools-scm
             ];
 
-            propagatedBuildInputs = with pkgs.python313Packages; [
+            propagatedBuildInputs = (with pkgs.python313Packages; [
               aiohttp
               audioop-lts
               httpx
@@ -116,7 +116,9 @@
               pydantic-core
               pydub
               websockets
-            ];
+            ]) ++ (with pkgs; [
+              ffmpeg
+            ]);
 
             src = pkgs.fetchPypi {
               pname = "cartesia";
