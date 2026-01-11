@@ -190,6 +190,7 @@ class AsteriskCallConsumer(CallConsumer):
         digits: int | None = None,
         min_digits: int | None = None,
         max_digits: int | None = None,
+        npc: models.NPC | None = None,
     ) -> [str, str]:
         """Gather DTMF digits from the player."""
 
@@ -208,7 +209,7 @@ class AsteriskCallConsumer(CallConsumer):
         request_logger.info("Waiting for %s to %s digits...", wanted_min, wanted_max)
 
         self.gathered_digits = ""
-        say_task = asyncio.create_task(self._say(text))
+        say_task = asyncio.create_task(self._say(text, npc=npc))
 
         say_end_time = None
         def on_say_done(_):

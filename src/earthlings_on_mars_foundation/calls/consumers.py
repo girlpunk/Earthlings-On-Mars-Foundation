@@ -67,12 +67,14 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
     async def _authenticate(self) -> models.Recruit:
         """Allow a player to authenticate themselves."""
         recruit = None
+        npc = models.NPC.objects.get(pk=2)
 
         while recruit is None and self.call_connected:
             recruit_id, reason = await self._gather(
                 "Please enter your recruit number to connect your call. If you've lost your multipass and need a replacement recruit number, press 0",
                 min_digits=1,
                 max_digits=4,
+                npc=npc
             )
 
             if reason != "dtmfDetected" or recruit_id is None:
@@ -87,6 +89,7 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
 
                 await self._say(
                     f"OK let's see, scanner says you're recruit {number}. You got that? {number}, don't forget it!",
+                    npc=npc
                 )
             else:
                 # Existing recruit
@@ -95,14 +98,14 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
                     recruit = await models.Recruit.objects.aget(id=recruit_id)
                 except (models.Recruit.DoesNotExist, TypeError):
                     # Verify the recruit number
-                    await self._say("Sorry, that number was not recognised.")
+                    await self._say("Sorry, that number was not recognised.", npc=npc)
                     continue
 
         if not recruit:
             return None
 
         self.callLog.recruit = recruit
-        await self._say("Caller verified!")
+        await self._say("Caller verified!", npc=npc)
         return recruit
 
     async def _check_existing_missions(self, recruit: models.Recruit) -> bool:
