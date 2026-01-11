@@ -97,7 +97,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "calls.middleware.SessionLogMiddleware",
+    #"calls.middleware.SessionLogMiddleware",
 ]
 
 ROOT_URLCONF = "earthlings_on_mars_foundation.urls"
