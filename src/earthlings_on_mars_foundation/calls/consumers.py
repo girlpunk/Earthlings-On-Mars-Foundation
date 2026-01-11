@@ -64,10 +64,9 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
         data = json.loads(text_data)
         await self.receive_json(data)
 
-    async def _authenticate(self) -> models.Recruit:
+    async def _authenticate(self, npc: models.NPC) -> models.Recruit:
         """Allow a player to authenticate themselves."""
         recruit = None
-        npc = models.NPC.objects.get(pk=2)
 
         while recruit is None and self.call_connected:
             recruit_id, reason = await self._gather(
@@ -289,17 +288,19 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
     async def _new_call(self) -> None:
         """Prepare new call logic."""
         try:
-            recruit = await self._authenticate()
+            npc = await models.NPC.objects.aget(pk=2)
+
+            recruit = await self._authenticate(npc=npc)
             if not self.call_connected:
                 return
             if not recruit:
-                await self._say("Unable to identify caller.")
+                await self._say("Unable to identify caller.", npc=npc)
                 await self._hangup()
                 return
 
             if self.callLog.NPC is None:
                 request_logger.warning("NPC is none")
-                await self._say("Unable to identify which NPC you are calling.")
+                await self._say("Unable to identify which NPC you are calling.", npc=npc)
                 self._send()
                 return
 
