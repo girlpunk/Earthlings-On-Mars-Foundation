@@ -160,8 +160,8 @@ class AsteriskCallConsumer(CallConsumer):
 
         headers = self.scope['headers']
         host = next(iter([h[1].decode('ascii') for h in headers if h[0] == b'host']))
-        # TODO detect http/https
-        media = "sound:http://%s%s" % (host, reverse("speech", kwargs={"recording_id": speech.id}))
+        # TODO detect http/https using request.build_absolute_uri()
+        media = "sound:https://%s%s" % (host, reverse("speech", kwargs={"recording_id": speech.id}))
 
         playback_id = str(uuid.uuid4())
         tracker = threading.Event()
