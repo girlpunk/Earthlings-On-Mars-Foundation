@@ -78,6 +78,8 @@ class AsteriskCallConsumer(CallConsumer):
             pass
         elif mtype == "ChannelVarset":
             pass
+        elif mtype == "PeerStatusChange":
+            pass
         elif mtype == "ChannelHangupRequest":
             self.call_hungup(mtype)
             data["channel"]["state"] = "Down"
