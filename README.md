@@ -3,13 +3,14 @@
 Interactive Fiction telephone game for EMF Camp 2026
 
 The [EMF](https://emfcamp.org) site has ~15 hard wired vintage public telephones around the site.  In this game, they each represent different areas in a colony base on Mars.  Players interact with the game by phoning various NPCs who hand out missions to complete that will involve calling back from specific phones, with specific numbers, etc.
+
 Like a roll-your-own-adventure book/game, there will be some overall plot progression with various details released through out the 3 days of the event.  Some missions may only be available at certain times, etc.
 The game will be advertised by stickers on the info boards around each public phone that direct players to call a given NPC.  Players can join the game by calling any of the main NPCs.
 
+______________________________________________________________________
+
 [![PyPI - Version](https://img.shields.io/pypi/v/earthlings-on-mars-foundation.svg)](https://pypi.org/project/earthlings-on-mars-foundation)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/earthlings-on-mars-foundation.svg)](https://pypi.org/project/earthlings-on-mars-foundation)
-
-______________________________________________________________________
 
 ## Table of Contents
 
