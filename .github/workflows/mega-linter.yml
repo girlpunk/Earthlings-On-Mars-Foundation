@@ -201,7 +201,7 @@ jobs:
       # setup Docker buld action
       - name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
       - run: nix build .#container
       # Login against a Docker registry except on PR
       # https://github.com/docker/login-action
